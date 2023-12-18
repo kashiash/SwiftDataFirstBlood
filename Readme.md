@@ -171,90 +171,77 @@ import SwiftUI
 import SwiftData
 
 struct AddNewBookView: View {
-    
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
     @State private var title: String = ""
     @State private var author: String = ""
     @State private var publishedYear: Int?
-    
     var body: some View {
+
         NavigationStack {
-            VStack(
-                alignment: .leading
-            ) {
-                Text(
-                    "Tytuł książki:"
-                )
+            VStack( alignment: .leading){
+                Text("Book title:")
+                TextField("Enter title",text: $title)
+                    .textFieldStyle(.roundedBorder)
+
+                Text("Author:")
+                TextField("Enter book author",text: $author)
+                    .textFieldStyle(
+                        .roundedBorder)
+
+                Text("Published:")
                 TextField(
-                    "Wprowadź tytuł",
-                    text: $title
-                )
-                .textFieldStyle(
-                    .roundedBorder
-                )
-                
-                Text(
-                    "Autor:"
-                )
-                TextField(
-                    "Wprowadź autora książki",
-                    text: $author
-                )
-                .textFieldStyle(
-                    .roundedBorder
-                )
-                
-                Text(
-                    "Rok publikacji:"
-                )
-                TextField(
-                    "Wprowadź rok publikacji",
+                    "Enter published year",
                     value: $publishedYear,
                     format: .number
                 )
-                .textFieldStyle(
-                    .roundedBorder
-                )
-                .keyboardType(
-                    .numberPad
-                )
-                
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.numberPad)
+
                 HStack {
-                    
-                    Button(
-                        "Anuluj",
-                        role: .destructive
-                    ) {
-                        // Tu możesz dodać kod obsługujący anulowanie operacji
+
+                    Button("Cancel", role: .destructive) {
+                        dismiss()
                     }
-                    .buttonStyle(
-                        .bordered
-                    )
-                    
+                    .buttonStyle(.bordered)
+
                     Spacer()
-                    
-                    Button(
-                        "Zapisz"
-                    ) {
-                        // Tu możesz dodać kod obsługujący zapisywanie nowej książki
+
+                    Button("Save") {
+                        guard let publishedYear = publishedYear else { return }
+                        let book = Book(title: title, author: author, publishedYear: publishedYear)
+
+                        context.insert(book)
+
+                        do {
+                            try context.save()
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+
+                        dismiss()
                     }
-                    .buttonStyle(
-                        .bordered
-                    )
+                    .buttonStyle( .bordered )
+                    .disabled(!isFormValid)
                 }
-                
                 Spacer()
             }
             .padding()
-            .navigationTitle(
-                "Dodaj Nową Książkę"
-            )
+            .navigationTitle("Add New Book")
         }
+    }
+
+    private var isFormValid: Bool {
+        !title.isEmpty && !author.isEmpty && publishedYear != nil
     }
 }
 
 #Preview {
     AddNewBookView()
+        .modelContainer(for: [Book.self])
 }
+
 ```
 
 Ten kod definiuje widok (`View`), który pozwala użytkownikowi wprowadzić informacje o nowej książce, takie jak tytuł, autor i rok publikacji. Wprowadzone dane są przechowywane w zmiennych stanu (`@State`), a przyciski "Anuluj" i "Zapisz" pozwalają na zarządzanie operacjami anulowania i zapisywania nowej książki. Widok ten jest dodatkowo umieszczony w nawigacyjnym stosie (`NavigationStack`) i ma tytuł "Dodaj Nową Książkę".
@@ -319,9 +306,7 @@ private var isValid: Bool {
 Dodajmy funkcjonalność zapisywania do przycisku "Save".
 
 ```swift
-Button(
-    "Save"
-) {
+Button("Save") {
     guard let publishedYear = publishedYear else { return }
     let book = Book(title: title, author: author, publishedYear: publishedYear)
     
@@ -343,13 +328,10 @@ Button(
 
 Ten kod sprawdza, czy wszystkie wymagane pola są wypełnione, a także tworzy i zapisuje nową książkę w bazie danych, gdy użytkownik naciśnie przycisk "Save".
 
-Dodatkowo obsluzymy operacje anulowania. Dodajemy wywołanie funkcji dismiss w bloku akcji przycisku "Cancel", aby zamknąć ten widok.
+Dodatkowo obsłużymy operacje anulowania. Dodajemy wywołanie funkcji dismiss w bloku akcji przycisku "Cancel", aby zamknąć ten widok.
 
 ```swift
-Button(
-    "Cancel",
-    role: .destructive
-) {
+Button("Cancel",role: .destructive) {
     dismiss()
 }
 .buttonStyle(
@@ -373,7 +355,7 @@ struct BookListView: View {
     @Query private var books: [Book]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 ForEach(books) { book in
                     Text(book.title)
@@ -514,7 +496,7 @@ Teraz lista książek będzie wyświetlać więcej informacji o każdej książc
 
 
 
-Teraz mamy aplikację, która może trwale przechowywać dane za pomocą **SwiftData**, a także możemy przeglądać wszystkie zapisane rekordy między uruchomieniami aplikacji, więc teraz zbudujemy funkcjonalność usuwania rekordów, abyśmy mogli usunąć rekord ze magazynu danych.
+Teraz mamy aplikację, która może trwale przechowywać dane za pomocą **SwiftData**, a także możemy przeglądać wszystkie zapisane rekordy między uruchomieniami aplikacji, więc teraz dodamy funkcjonalność usuwania rekordów, abyśmy mogli usunąć rekord ze magazynu danych.
 
 Zacznijmy od przekazania do widoku kontekstu modelu za pomocą obiektu **Environment**, dzięki czemu będziemy mogli pracować nad kontekstem, aby usunąć rekord i zapisać zmiany z powrotem w bazie danych.
 
@@ -564,7 +546,7 @@ struct BookListView: View {
                 }
                 .onDelete(perform: delete(indexSet:))
             }
-            .navigationTitle("Dziennik Czytania")
+            .navigationTitle("Reading Logs")
         }
     }
     
@@ -581,20 +563,34 @@ struct BookListView: View {
     }
 }
 
-#Podgląd {
+#Preview {
     BookListView()
         .modelContainer(for: [Book.self])
 }
 
 ```
 
-Zbuduj i uruchom aplikację na symulatorze, aby dodać nowy rekord do naszego dziennika czytania. Teraz możemy przeciągnąć, aby usunąć rekord z listy.
-
-
+Zbuduj i uruchom aplikację na symulatorze, aby dodać nowy rekord do naszego dziennika czytania. Teraz możemy przeciągnąć, aby usunąć rekord z listy. Przydałoby się móc modyfikować już wpisane dane:
 
 ### Aktualizacja danych `BookDetailView`
 
 Dodajmy funkcjonalność aktualizacji do naszej aplikacji do rejestrowania przeczytanych książek. Rozpoczniemy od stworzenia nowego widoku SwiftUI o nazwie `BookDetailView`, który pozwoli nam zobaczyć szczegóły wybranej książki oraz umożliwi aktualizację tych szczegółów, jeśli będzie to konieczne.
+
+Dodajmy właściwość książki, która zostanie przekazana przy inicjalizacji widoku szczegółowego:
+
+```swift
+import SwiftUI
+
+struct BookDetailView: View {
+    let book: Book
+    
+    var body: some View {
+        Text("Hello, World!")
+    }
+}
+```
+
+Potrzebujemy także dostępu do kontekstu modelu, aby zapisać zmiany w magazynie danych wraz z możliwością odrzucenia prezentowanego widoku. Obydwa możemy uzyskać za pomocą obiektów środowiska.
 
 ```swift
 import SwiftUI
@@ -605,53 +601,34 @@ struct BookDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     
+    var body: some View {
+        Text("Hello, World!")
+    }
+}
+```
+
+Tworzymy kilka właściwości stanu (`@State`), w tym `isEditing`, który będzie wskazywał, czy widok jest w trybie edycji, oraz właściwości `title`, `author` i `publishedYear`, które będą przechowywać informacje o książce. Te wartości zostaną zainicjowane na podstawie przekazanego obiektu książki.
+
+```swift
+struct BookDetailView: View {
+    let book: Book
+    
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    
     @State private var isEditing = false
+    
     @State private var title: String = ""
     @State private var author: String = ""
     @State private var publishedYear: Int? = nil
     
     init(book: Book) {
         self.book = book
-        self._title = State(initialValue: book.title)
-        self._author = State(initialValue: book.author)
-        self._publishedYear = State(initialValue: book.publishedYear)
+        self._title = State.init(initialValue: book.title)
+        self._author = State.init(initialValue: book.author)
+        self._publishedYear = State.init(initialValue: book.publishedYear)
     }
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                if isEditing {
-                    Section(header: Text("Edit Book Details")) {
-                        TextField("Title", text: $title)
-                        TextField("Author", text: $author)
-                        TextField("Published Year", value: $publishedYear, format: .number)
-                    }
-                } else {
-                    Section(header: Text("Book Details")) {
-                        Text("Title: \(book.title)")
-                        Text("Author: \(book.author)")
-                        Text("Published Year: \(book.publishedYear ?? 0)")
-                    }
-                }
-            }
-            .navigationTitle("Book Details")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isEditing.toggle()
-                    }) {
-                        Text(isEditing ? "Done" : "Edit")
-                    }
-                }
-            }
-        }
-    }
-}
 ```
-
-W tym widoku `BookDetailView` mamy dostęp do właściwości `book`, która jest przekazywana podczas inicjalizacji widoku. Korzystamy również z `@Environment` do uzyskania dostępu do kontekstu modelu (`modelContext`) i do możliwości zamykania wyświetlanego widoku (`dismiss`).
-
-Tworzymy kilka właściwości stanu (`@State`), w tym `isEditing`, który będzie wskazywał, czy widok jest w trybie edycji, oraz właściwości `title`, `author` i `publishedYear`, które będą przechowywać informacje o książce. Te wartości zostaną zainicjowane na podstawie przekazanego obiektu książki.
 
 Następnie w ciele widoku `BookDetailView` dodajemy formularz (`Form`). Jeśli `isEditing` jest ustawione na `true`, wyświetlamy grupę pól tekstowych (`TextField`), w przeciwnym razie wyświetlamy informacje o książce w polach tekstowych (`Text`). Dodajemy także pasek narzędziowy (`toolbar`), który zawiera przycisk do przełączania stanu edycji widoku.
 
@@ -700,16 +677,31 @@ struct BookDetailView: View {
                 }
             }
         }
-        .navigationTitle("Book detail")
+        .navigationTitle("Book Detail")
     }
 }
 ```
 
-
-
-
-
 Dodajmy teraz funkcjonalność pozwalająca zapisywać dane do bazy:
+
+```swift
+                Button("Save") {
+                    guard let publishedYear = publishedYear else { return }
+                    book.title = title
+                    book.author = author
+                    book.publishedYear = publishedYear
+                    
+                    do {
+                        try context.save()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                    
+                    dismiss()
+                }
+```
+
+Całość `BookDetailView` powinna wyglądać tak:
 
 ```swift
 struct BookDetailView: View {
@@ -806,8 +798,6 @@ struct BookCellView: View {
 ```
 
 Teraz w widoku `BookCellView` mamy `NavigationLink`, który przenosi do widoku szczegółów (`BookDetailView`) po naciśnięciu komórki z informacjami o książce. Zastosowaliśmy także modyfikator `navigationDestination`, aby określić, do którego widoku ma prowadzić link i przekazać odpowiednią książkę jako wartość. Teraz, po zbudowaniu i uruchomieniu aplikacji, powinno działać przejście do widoku szczegółów po kliknięciu w komórkę z książką.
-
-
 
 
 

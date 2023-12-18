@@ -15,6 +15,7 @@
 		76DF292A2B2FAA570005A7A3 /* AddNewBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */; };
 		76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD4E2B302F5300E2C47C /* BookListView.swift */; };
 		76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD502B30361700E2C47C /* BookCellView.swift */; };
+		76F0CD532B3041E100E2C47C /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD522B3041E100E2C47C /* BookDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewBookView.swift; sourceTree = "<group>"; };
 		76F0CD4E2B302F5300E2C47C /* BookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookListView.swift; sourceTree = "<group>"; };
 		76F0CD502B30361700E2C47C /* BookCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCellView.swift; sourceTree = "<group>"; };
+		76F0CD522B3041E100E2C47C /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,11 +66,12 @@
 				76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */,
 				76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */,
 				76F0CD4E2B302F5300E2C47C /* BookListView.swift */,
+				76F0CD522B3041E100E2C47C /* BookDetailView.swift */,
+				76F0CD502B30361700E2C47C /* BookCellView.swift */,
 				76DF29192B2FA8B70005A7A3 /* ContentView.swift */,
 				76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */,
 				76DF291D2B2FA8B80005A7A3 /* SwiftDataFirstBlood.entitlements */,
 				76DF291E2B2FA8B80005A7A3 /* Preview Content */,
-				76F0CD502B30361700E2C47C /* BookCellView.swift */,
 			);
 			path = SwiftDataFirstBlood;
 			sourceTree = "<group>";
@@ -165,6 +168,7 @@
 				76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */,
 				76DF29182B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift in Sources */,
 				76DF29282B2FA8E30005A7A3 /* Book.swift in Sources */,
+				76F0CD532B3041E100E2C47C /* BookDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

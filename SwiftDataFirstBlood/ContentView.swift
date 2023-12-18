@@ -13,12 +13,6 @@ struct ContentView: View {
         VStack {
             BookListView()
 
-            Button("Add new book") {
-                presentAddNew.toggle()
-            }
-            .sheet(isPresented: $presentAddNew, content: {
-                AddNewBookView()
-            })
         }
     }
 }
