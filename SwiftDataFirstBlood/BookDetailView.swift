@@ -19,6 +19,8 @@ struct BookDetailView: View {
     @State private var author: String = ""
     @State private var publishedYear: Int? = nil
 
+    @State private var showAddNewNote = false
+
     init(book: Book) {
         self.book = book
         self._title = State(initialValue: book.title)
@@ -41,6 +43,23 @@ struct BookDetailView: View {
                 Text(book.author)
                 Text(book.publishedYear.description)
             }
+            Section("Notes") {
+                Button("Add new note") {
+                    showAddNewNote.toggle()
+                }
+                .sheet(isPresented: $showAddNewNote, content: {
+                    NavigationStack {
+                        AddNewNote(book: book)
+                    }
+                    .presentationDetents([.fraction(0.3)])
+                    .interactiveDismissDisabled()
+                })
+                if book.notes.isEmpty {
+                    ContentUnavailableView("No notes", systemImage: "note")
+                } else {
+                    NotesListView(book: book)
+                }
+            }
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -54,5 +73,15 @@ struct BookDetailView: View {
 }
 
 //#Preview {
-//    BookDetailView()
+//    do {
+//        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+//        let container = try ModelContainer(for: Book.self, configurations: config)
+//        let example = Book.generateRandomBook()
+//
+//        return BookDetailView(book: example)
+//            .modelContainer(container)
+//    } catch {
+//        fatalError("Coś się zjebsuło")
+//    }
+//
 //}

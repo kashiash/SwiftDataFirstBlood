@@ -860,6 +860,79 @@ struct BookListView: View {
 }
 ```
 
+### Podgląd ekranu 
+
+
+
+```swift
+import Foundation
+
+extension Book {
+
+static var sampleBooks:  [Book] {
+
+    // Define arrays of first names and last names
+    let firstNames = ["John", "Emily", "Michael", "Sophia", "William", "Olivia", "James", "Ava", "Daniel", "Charlotte"]
+    let lastNames = ["Smith", "Johnson", "Brown", "Davis", "Wilson", "Anderson", "Garcia", "Martinez", "Lee", "Harris"]
+
+    // Function to generate a random name
+    func generateRandomName() -> String {
+        let randomFirstName = firstNames.randomElement() ?? ""
+        let randomLastName = lastNames.randomElement() ?? ""
+
+        return "\(randomFirstName) \(randomLastName)"
+    }
+
+    let adjectives = ["Red", "Happy", "Mysterious", "Brilliant", "Gentle", "Wild"]
+    let nouns = ["Fox", "Sun", "Mountain", "Ocean", "Castle", "Dream"]
+    let verbs = ["Dances", "Laughs", "Sings", "Whispers", "Explores", "Glows"]
+
+    // Function to generate a random title
+    func generateRandomTitle() -> String {
+        let randomAdjective = adjectives.randomElement() ?? ""
+        let randomNoun = nouns.randomElement() ?? ""
+        let randomVerb = verbs.randomElement() ?? ""
+
+        return "\(randomAdjective) \(randomNoun) \(randomVerb)"
+    }
+
+
+    // Get the current year
+    let currentYear = Calendar.current.component(.year, from: Date())
+
+  return [ 
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
+
+
+  ]
+}
+    static var bookWithNotes: Book {
+        let book = Book(title: "Kubus Puchatek", author: "A.A. Milne", publishedYear: 1926)
+        Note.sampleNotes.forEach { note in
+            note.book = book
+            book.notes.append(note)
+        }
+        return book
+    }
+}
+
+```
+
 
 
 ##  Model `Notes`. Relacje z innymi danymi
@@ -958,17 +1031,55 @@ dodajemy informacje o kontekscie i zmienną do sterowania formularzem
 ```swift
 struct AddNewNote: View {
     let book: Book
-    
-    @State private var title: String = ""
-    @State private var message: String = ""
-    
+    ...
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+      var body: some View {...
+         }
 ```
 
 
 
-dodajemy przyciski Save i Close
+dodajemy formularz z polami do wprowadzania danych:
+
+```swift
+        Form {
+            TextField("Note title", text: $title)
+            TextField("Note", text: $message)
+        }
+        .navigationTitle("Add new note")
+```
+
+
+
+przyciski Save i Close
+
+```swift
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Close") {
+                    dismiss()
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Save") {
+                    let note = Note(title: title, message: message)
+                    note.book = book
+                    context.insert(note)
+                    
+                    do {
+                        try context.save()
+                        book.notes.append(note)
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                    
+                    dismiss()
+                }
+            }
+        }
+```
 
 
 
@@ -1056,6 +1167,9 @@ Zacznij od dodania nowego właściwości stanu (`@State` property) w celu przeł
 Następnie stwórz nową sekcję pod formularzem dla notatek:
 
 ```swift
+struct BookDetailView: View { 
+  @State private var showAddNewNote = false
+  ...
 var body: some View {
     Form {
         if isEditing {
@@ -1126,8 +1240,6 @@ Section("Notes") {
 Zbuduj i uruchom aplikację, aby zobaczyć to w działaniu.
 
 
-
-![2023-10-03_12-43-34 (../biezace%2520projekty/BookDiaryX/Docs/2023-10-03_12-43-34%2520(1).gif)](2023-10-03_12-43-34%20(1).gif)
 
 Teraz mamy możliwość dodawania notatek do książek, ale co jeśli wprowadzimy notatkę przez pomyłkę? Nie byłoby miło móc ją usunąć? Dla tego celu dodajmy funkcję usuwania notatki do listy notatek.
 
@@ -1213,46 +1325,4 @@ struct NotesListView: View {
 ```
 
 
-
-![2023-10-03_12-49-20 (../biezace%2520projekty/BookDiaryX/Docs/2023-10-03_12-49-20%2520(1).gif)](2023-10-03_12-49-20%20(1).gif)
-
-
-
-Teraz, gdy dodaliśmy właściwość book lub note do widoków, nasza struktura podglądu nie będzie już działać. Co gorsza, nie możemy po prostu utworzyć tymczasowego obiektu Book w podglądzie, ponieważ SwiftData nie będzie wiedział, gdzie go utworzyć – nie ma aktywnego kontenera modelu ani kontekstu wokół.
-
-Aby to naprawić, musimy ręcznie utworzyć kontener modelu, a zrobimy to w bardzo szczególny sposób: ponieważ jest to kod podglądu z danymi przykładowymi, utworzymy kontener w pamięci, aby wszelkie obiekty podglądu, które tworzymy, nie były zapisywane, ale były tylko tymczasowe.
-
-To wymaga czterech kroków:
-
-1. Utworzenie niestandardowego obiektu **ModelConfiguration**, aby określić, że chcemy użyć pamięci podręcznej.
-2. Użycie tego obiektu do stworzenia **kontenera modelu**.
-3. Utworzenie przykładowego obiektu Destination zawierającego dane próbkowe. Ten obiekt zostanie automatycznie utworzony w kontenerze modelu, który właśnie stworzyliśmy.
-4. Przesłanie tego przykładowego obiektu i naszego kontenera modelu do np widoku BookDetailView, a następnie zwrócenie ich wszystkich.
-
-Do tej pory nie musieliśmy robić kroków 1 i 2, ponieważ wszystko to było obsługiwane przez modyfikator modelContainer() w pliku BookDiaryXApp.swift, ale teraz musimy to zrobić ręcznie, abyśmy mogli utworzyć obiekt Book do przekazania do widoku
-
-skonfigurujemy teraz podglad w BookDetailView:
-
-```swift
-#Preview {
-    do {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Book.self, configurations: config)
-        let example = Book.generateRandomBook()
-
-        return BookDetailView(book: example)
-            .modelContainer(container)
-    } catch {
-        fatalError("Coś się zjebsuło")
-    }
-
-}
-
-```
-
-
-
-
-
-**Ważne: Jeśli próbujesz utworzyć instancję modelu SwiftData i nie istnieje już kontener modelu, twój podgląd może po prostu ulec awarii. Bądź ostrożny!**
 

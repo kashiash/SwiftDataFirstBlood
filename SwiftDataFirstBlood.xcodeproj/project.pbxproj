@@ -16,6 +16,10 @@
 		76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD4E2B302F5300E2C47C /* BookListView.swift */; };
 		76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD502B30361700E2C47C /* BookCellView.swift */; };
 		76F0CD532B3041E100E2C47C /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD522B3041E100E2C47C /* BookDetailView.swift */; };
+		76F0CD562B304F2200E2C47C /* Preview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD552B304F2200E2C47C /* Preview.swift */; };
+		76F0CD5C2B3057B800E2C47C /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD5B2B3057B800E2C47C /* Note.swift */; };
+		76F0CD5E2B3057E900E2C47C /* AddNewNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD5D2B3057E900E2C47C /* AddNewNote.swift */; };
+		76F0CD602B30591B00E2C47C /* NotesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD5F2B30591B00E2C47C /* NotesListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +34,10 @@
 		76F0CD4E2B302F5300E2C47C /* BookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookListView.swift; sourceTree = "<group>"; };
 		76F0CD502B30361700E2C47C /* BookCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCellView.swift; sourceTree = "<group>"; };
 		76F0CD522B3041E100E2C47C /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
+		76F0CD552B304F2200E2C47C /* Preview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preview.swift; sourceTree = "<group>"; };
+		76F0CD5B2B3057B800E2C47C /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
+		76F0CD5D2B3057E900E2C47C /* AddNewNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewNote.swift; sourceTree = "<group>"; };
+		76F0CD5F2B30591B00E2C47C /* NotesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,8 +70,11 @@
 		76DF29162B2FA8B70005A7A3 /* SwiftDataFirstBlood */ = {
 			isa = PBXGroup;
 			children = (
+				76F0CD542B304F1500E2C47C /* Preview */,
 				76DF29262B2FA8D10005A7A3 /* Model */,
 				76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */,
+				76F0CD5D2B3057E900E2C47C /* AddNewNote.swift */,
+				76F0CD5F2B30591B00E2C47C /* NotesListView.swift */,
 				76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */,
 				76F0CD4E2B302F5300E2C47C /* BookListView.swift */,
 				76F0CD522B3041E100E2C47C /* BookDetailView.swift */,
@@ -88,8 +99,17 @@
 			isa = PBXGroup;
 			children = (
 				76DF29272B2FA8E30005A7A3 /* Book.swift */,
+				76F0CD5B2B3057B800E2C47C /* Note.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		76F0CD542B304F1500E2C47C /* Preview */ = {
+			isa = PBXGroup;
+			children = (
+				76F0CD552B304F2200E2C47C /* Preview.swift */,
+			);
+			path = Preview;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -164,8 +184,12 @@
 			files = (
 				76DF292A2B2FAA570005A7A3 /* AddNewBookView.swift in Sources */,
 				76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */,
+				76F0CD5E2B3057E900E2C47C /* AddNewNote.swift in Sources */,
+				76F0CD562B304F2200E2C47C /* Preview.swift in Sources */,
 				76DF291A2B2FA8B70005A7A3 /* ContentView.swift in Sources */,
 				76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */,
+				76F0CD5C2B3057B800E2C47C /* Note.swift in Sources */,
+				76F0CD602B30591B00E2C47C /* NotesListView.swift in Sources */,
 				76DF29182B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift in Sources */,
 				76DF29282B2FA8E30005A7A3 /* Book.swift in Sources */,
 				76F0CD532B3041E100E2C47C /* BookDetailView.swift in Sources */,
