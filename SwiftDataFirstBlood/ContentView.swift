@@ -8,14 +8,18 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var presentAddNew = false
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+            BookListView()
+
+            Button("Add new book") {
+                presentAddNew.toggle()
+            }
+            .sheet(isPresented: $presentAddNew, content: {
+                AddNewBookView()
+            })
         }
-        .padding()
     }
 }
 

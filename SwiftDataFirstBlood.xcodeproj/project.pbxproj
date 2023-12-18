@@ -11,6 +11,10 @@
 		76DF291A2B2FA8B70005A7A3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29192B2FA8B70005A7A3 /* ContentView.swift */; };
 		76DF291C2B2FA8B80005A7A3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */; };
 		76DF29202B2FA8B80005A7A3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 76DF291F2B2FA8B80005A7A3 /* Preview Assets.xcassets */; };
+		76DF29282B2FA8E30005A7A3 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29272B2FA8E30005A7A3 /* Book.swift */; };
+		76DF292A2B2FAA570005A7A3 /* AddNewBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */; };
+		76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD4E2B302F5300E2C47C /* BookListView.swift */; };
+		76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F0CD502B30361700E2C47C /* BookCellView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +24,10 @@
 		76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		76DF291D2B2FA8B80005A7A3 /* SwiftDataFirstBlood.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftDataFirstBlood.entitlements; sourceTree = "<group>"; };
 		76DF291F2B2FA8B80005A7A3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		76DF29272B2FA8E30005A7A3 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
+		76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewBookView.swift; sourceTree = "<group>"; };
+		76F0CD4E2B302F5300E2C47C /* BookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookListView.swift; sourceTree = "<group>"; };
+		76F0CD502B30361700E2C47C /* BookCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCellView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,11 +60,15 @@
 		76DF29162B2FA8B70005A7A3 /* SwiftDataFirstBlood */ = {
 			isa = PBXGroup;
 			children = (
+				76DF29262B2FA8D10005A7A3 /* Model */,
 				76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */,
+				76DF29292B2FAA570005A7A3 /* AddNewBookView.swift */,
+				76F0CD4E2B302F5300E2C47C /* BookListView.swift */,
 				76DF29192B2FA8B70005A7A3 /* ContentView.swift */,
 				76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */,
 				76DF291D2B2FA8B80005A7A3 /* SwiftDataFirstBlood.entitlements */,
 				76DF291E2B2FA8B80005A7A3 /* Preview Content */,
+				76F0CD502B30361700E2C47C /* BookCellView.swift */,
 			);
 			path = SwiftDataFirstBlood;
 			sourceTree = "<group>";
@@ -67,6 +79,14 @@
 				76DF291F2B2FA8B80005A7A3 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		76DF29262B2FA8D10005A7A3 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				76DF29272B2FA8E30005A7A3 /* Book.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,8 +159,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76DF292A2B2FAA570005A7A3 /* AddNewBookView.swift in Sources */,
+				76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */,
 				76DF291A2B2FA8B70005A7A3 /* ContentView.swift in Sources */,
+				76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */,
 				76DF29182B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift in Sources */,
+				76DF29282B2FA8E30005A7A3 /* Book.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
