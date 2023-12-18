@@ -339,6 +339,8 @@ Button("Cancel",role: .destructive) {
 )
 ```
 
+![image-20231218104304243](image-20231218104304243.png)
+
 
 
 Udało nam się zapisać książkę, ale w tym momencie nie mamy sposobu, aby zobaczyć wszystkie zapisane książki, i to jest kolejne wyzwanie: 
@@ -494,7 +496,7 @@ struct BookListView: View {
 
 Teraz lista książek będzie wyświetlać więcej informacji o każdej książce dzięki widokowi `BookCellView`.
 
-
+![image-20231218104435801](image-20231218104435801.png)
 
 Teraz mamy aplikację, która może trwale przechowywać dane za pomocą **SwiftData**, a także możemy przeglądać wszystkie zapisane rekordy między uruchomieniami aplikacji, więc teraz dodamy funkcjonalność usuwania rekordów, abyśmy mogli usunąć rekord ze magazynu danych.
 
@@ -570,7 +572,11 @@ struct BookListView: View {
 
 ```
 
-Zbuduj i uruchom aplikację na symulatorze, aby dodać nowy rekord do naszego dziennika czytania. Teraz możemy przeciągnąć, aby usunąć rekord z listy. Przydałoby się móc modyfikować już wpisane dane:
+Zbuduj i uruchom aplikację na symulatorze, aby dodać nowy rekord do naszego dziennika czytania. Teraz możemy przeciągnąć, aby usunąć rekord z listy. 
+
+![image-20231218104545680](image-20231218104545680.png)
+
+Przydałoby się móc modyfikować już wpisane dane:
 
 ### Aktualizacja danych `BookDetailView`
 
