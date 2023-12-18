@@ -860,86 +860,11 @@ struct BookListView: View {
 }
 ```
 
-### Podgląd ekranu
-
-ponizej kod roboczy
-
-```swift
-import Foundation
-
-extension Book {
-
-static var sampleBooks:  [Book] {
-
-    // Define arrays of first names and last names
-    let firstNames = ["John", "Emily", "Michael", "Sophia", "William", "Olivia", "James", "Ava", "Daniel", "Charlotte"]
-    let lastNames = ["Smith", "Johnson", "Brown", "Davis", "Wilson", "Anderson", "Garcia", "Martinez", "Lee", "Harris"]
-
-    // Function to generate a random name
-    func generateRandomName() -> String {
-        let randomFirstName = firstNames.randomElement() ?? ""
-        let randomLastName = lastNames.randomElement() ?? ""
-
-        return "\(randomFirstName) \(randomLastName)"
-    }
-
-    let adjectives = ["Red", "Happy", "Mysterious", "Brilliant", "Gentle", "Wild"]
-    let nouns = ["Fox", "Sun", "Mountain", "Ocean", "Castle", "Dream"]
-    let verbs = ["Dances", "Laughs", "Sings", "Whispers", "Explores", "Glows"]
-
-    // Function to generate a random title
-    func generateRandomTitle() -> String {
-        let randomAdjective = adjectives.randomElement() ?? ""
-        let randomNoun = nouns.randomElement() ?? ""
-        let randomVerb = verbs.randomElement() ?? ""
-
-        return "\(randomAdjective) \(randomNoun) \(randomVerb)"
-    }
-
-
-    // Get the current year
-    let currentYear = Calendar.current.component(.year, from: Date())
-
-  return [ 
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-           Book(title: generateRandomTitle(), author: generateRandomName(), publishedYear: Int(arc4random_uniform(UInt32(30))) + (currentYear - 30)),
-
-
-  ]
-}
-    static var bookWithNotes: Book {
-        let book = Book(title: "Kubus Puchatek", author: "A.A. Milne", publishedYear: 1926)
-        Note.sampleNotes.forEach { note in
-            note.book = book
-            book.notes.append(note)
-        }
-        return book
-    }
-}
-
-```
-
 
 
 ##  Model `Notes`. Relacje z innymi danymi
 
-
-
-Nasz dziennik czytelniczy zawiera spis książek, które dotąd przeczytaliśmy, ale co jeśli chcemy zapamiętać rzeczy, które nam się podobają w książce, na przykład ważne cytaty itp.? Możemy rozwiązać ten problem, dodając możliwość robienia notatek na poziomie książki, dzięki czemu każdy rekord książki będzie miał miejsce na dodawanie notatek o niej.
+​	Nasz dziennik czytelniczy zawiera spis książek, które dotąd przeczytaliśmy, ale co jeśli chcemy zapamiętać rzeczy, które nam się podobają w książce, na przykład ważne cytaty itp.? Możemy rozwiązać ten problem, dodając możliwość robienia notatek na poziomie książki, dzięki czemu każdy rekord książki będzie miał miejsce na dodawanie notatek o niej.
 W tym przypadku łączymy ze sobą dwa rekordy (Książka i Notatka) za pomocą wspólnego ogniwa. To połączenie nazywa się relacją między rekordami. Istnieją różne rodzaje relacji między rekordami.
 
 **Relacja jeden do jeden (1:1):** W relacji jeden do jeden, każdy rekord po jednej stronie relacji jest powiązany dokładnie z jednym rekordem po drugiej stronie, i vice versa. Na przykład możemy mieć rekord "`Osoba`" z relacją jeden do jeden z rekordem "`Paszport`", gdzie każda osoba ma tylko jeden paszport.
