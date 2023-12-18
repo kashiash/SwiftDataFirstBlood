@@ -10,9 +10,17 @@ import SwiftUI
 struct ContentView: View {
     @State private var presentAddNew = false
     var body: some View {
-        VStack {
+        TabView {
             BookListView()
-
+                .tabItem {
+                    Image(systemName: "books.vertical.fill")
+                    Text("Books")
+                }
+            GenreListView()
+                .tabItem {
+                    Image(systemName: "gear.circle")
+                    Text("Genre")
+                }
         }
     }
 }

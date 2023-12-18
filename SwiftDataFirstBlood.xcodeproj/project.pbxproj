@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		76206A9D2B30D8F400278E5F /* Genre.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76206A9C2B30D8F400278E5F /* Genre.swift */; };
+		76206A9F2B30DB9900278E5F /* GenreListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76206A9E2B30DB9900278E5F /* GenreListView.swift */; };
+		76206AA12B30DE9900278E5F /* AddNewGenre.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76206AA02B30DE9900278E5F /* AddNewGenre.swift */; };
 		76DF29182B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */; };
 		76DF291A2B2FA8B70005A7A3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29192B2FA8B70005A7A3 /* ContentView.swift */; };
 		76DF291C2B2FA8B80005A7A3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */; };
@@ -23,6 +26,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		76206A9C2B30D8F400278E5F /* Genre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Genre.swift; sourceTree = "<group>"; };
+		76206A9E2B30DB9900278E5F /* GenreListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreListView.swift; sourceTree = "<group>"; };
+		76206AA02B30DE9900278E5F /* AddNewGenre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewGenre.swift; sourceTree = "<group>"; };
 		76DF29142B2FA8B70005A7A3 /* SwiftDataFirstBlood.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftDataFirstBlood.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataFirstBloodApp.swift; sourceTree = "<group>"; };
 		76DF29192B2FA8B70005A7A3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -79,6 +85,8 @@
 				76F0CD4E2B302F5300E2C47C /* BookListView.swift */,
 				76F0CD522B3041E100E2C47C /* BookDetailView.swift */,
 				76F0CD502B30361700E2C47C /* BookCellView.swift */,
+				76206A9E2B30DB9900278E5F /* GenreListView.swift */,
+				76206AA02B30DE9900278E5F /* AddNewGenre.swift */,
 				76DF29192B2FA8B70005A7A3 /* ContentView.swift */,
 				76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */,
 				76DF291D2B2FA8B80005A7A3 /* SwiftDataFirstBlood.entitlements */,
@@ -100,6 +108,7 @@
 			children = (
 				76DF29272B2FA8E30005A7A3 /* Book.swift */,
 				76F0CD5B2B3057B800E2C47C /* Note.swift */,
+				76206A9C2B30D8F400278E5F /* Genre.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -184,12 +193,15 @@
 			files = (
 				76DF292A2B2FAA570005A7A3 /* AddNewBookView.swift in Sources */,
 				76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */,
+				76206AA12B30DE9900278E5F /* AddNewGenre.swift in Sources */,
 				76F0CD5E2B3057E900E2C47C /* AddNewNote.swift in Sources */,
+				76206A9D2B30D8F400278E5F /* Genre.swift in Sources */,
 				76F0CD562B304F2200E2C47C /* Preview.swift in Sources */,
 				76DF291A2B2FA8B70005A7A3 /* ContentView.swift in Sources */,
 				76F0CD4F2B302F5300E2C47C /* BookListView.swift in Sources */,
 				76F0CD5C2B3057B800E2C47C /* Note.swift in Sources */,
 				76F0CD602B30591B00E2C47C /* NotesListView.swift in Sources */,
+				76206A9F2B30DB9900278E5F /* GenreListView.swift in Sources */,
 				76DF29182B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift in Sources */,
 				76DF29282B2FA8E30005A7A3 /* Book.swift in Sources */,
 				76F0CD532B3041E100E2C47C /* BookDetailView.swift in Sources */,

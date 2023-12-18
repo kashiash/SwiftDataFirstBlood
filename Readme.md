@@ -12,7 +12,7 @@ SwiftData wykorzystuje makra do generowania kodu. Makra są kolejną  ciekawą f
 
 SwiftData automatycznie buduje schemat przy użyciu naszych modeli i skutecznie mapuje ich pola do magazynu danych. Obiekty zarządzane przez SwiftData są pobierane z bazy danych w razie potrzeby i automatycznie zapisywane w odpowiednim momencie, bez dodatkowej pracy z naszej strony.
 
-Aby lepiej zrozumieć to zagadnienie, skoncentrujmy się na rozwijaniu aplikacji przy użyciu SwiftData. Aplikacja ta będzie służyła do śledzenia przeczytanych przez nas książek i posiadać będzie sekcję notatek dla każdej z nich, umożliwiając nam zapisywanie istotnych aspektów danej lektury.
+Aby lepiej zrozumieć to zagadnienie, skoncentrujmy się na stworzeniu aplikacji przy użyciu SwiftData. Aplikacja ta będzie służyła do śledzenia przeczytanych przez nas książek i posiadać będzie sekcję notatek dla każdej z nich, umożliwiając nam zapisywanie istotnych aspektów danej lektury.
 
 
 
@@ -860,9 +860,9 @@ struct BookListView: View {
 }
 ```
 
-### Podgląd ekranu 
+### Podgląd ekranu
 
-
+ponizej kod roboczy
 
 ```swift
 import Foundation
@@ -1131,6 +1131,8 @@ struct AddNewNote: View {
 
 Dodajemy widok do wyświetlania listy naszych notatek `NotesListView`:
 
+Obiekt książki zostanie przekazany jako parametr wejściowy tego widoku, a my użyjemy widoku List i ForEach do wyrenderowania listy notatek na temat książki.
+
 ```swift
 import SwiftUI
 import SwiftData
@@ -1153,8 +1155,6 @@ struct NotesListView: View {
     }
 }
 ```
-
-
 
 Dodajmy ten widok jako sekcję do widoku szczegółowego książki.
 
@@ -1214,7 +1214,7 @@ Section("Notes") {
 
 
 
-Jesteśmy gotowi, aby wyświetlić wszystkie notatki powiązane z widokiem. Podczas wyświetlania notatek miałoby sens pokazać pusty stan, aby poinformować użytkownika, że nie ma notatek, jeśli jeszcze nie dodał żadnych notatek do książki. W tym celu użyjemy widoku `ContentUnavailable`.
+Jesteśmy gotowi, aby wyświetlić wszystkie notatki powiązane z bieżącą książką. Podczas wyświetlania notatek miałoby sens pokazać pusty stan, aby poinformować użytkownika, że nie ma notatek, jeśli jeszcze nie dodał żadnych notatek do książki. W tym celu użyjemy widoku `ContentUnavailable`.
 
 ```swift
 Section("Notes") {
@@ -1239,7 +1239,7 @@ Section("Notes") {
 
 Zbuduj i uruchom aplikację, aby zobaczyć to w działaniu.
 
-
+![image-20231218203514292](image-20231218203514292.png)
 
 Teraz mamy możliwość dodawania notatek do książek, ale co jeśli wprowadzimy notatkę przez pomyłkę? Nie byłoby miło móc ją usunąć? Dla tego celu dodajmy funkcję usuwania notatki do listy notatek.
 
@@ -1268,8 +1268,6 @@ private func deleteNote(indexSet: IndexSet) {
     }
 }
 ```
-
-W powyższym kodzie `deleteNote` jest funkcją, która przyjmuje indeksy notatek do usunięcia (`offsets`) i usuwa odpowiednie notatki z kontekstu modelu. Następnie zapisuje zmiany w kontekście za pomocą `context.save()`. Upewnij się, że obsłużysz ewentualne błędy, które mogą wystąpić podczas zapisywania.
 
 Teraz możemy wywołać tę funkcję w widoku, gdzie użytkownik ma możliwość usuwania notatek, używając `.onDelete(perform: deleteNote)`. Na przykład:
 
@@ -1324,5 +1322,269 @@ struct NotesListView: View {
 }
 ```
 
+![image-20231218203547511](image-20231218203547511.png)
+
+## Model Genre - rozbudowa o gatunek literacki
+
+Książki są podzielone na gatunki literackie, dlatego logiczne byłoby, gdyby nasz dziennik książek zawierał klasyfikację gatunkową, która pomogłaby nam śledzić liczbę przeczytanych przez nas książek fikcyjnych i niefikcyjnych.
+Biorąc pod uwagę, że gatunek może obejmować wiele książek i odwrotnie, książkę można powiązać z wieloma gatunkami literackimi, ten scenariusz oferuje doskonałą okazję do przetestowania, w jaki sposób SwiftData zarządza relacją wiele do wielu (N:N).
+Zaczniemy od dodania nowego modelu do naszego projektu.
+
+```swift
+import Foundation
+import SwiftData
+
+@Model
+final class Genre {
+    var name: String
+    var books = [Book]()
+    
+    init(name: String) {
+        self.name = name
+    }
+}
+```
+
+Zaktualizujmy także model książki, aby uwzględnić relację między modelami gatunku i książki.
+Relacja między książką a gatunkiem będzie opierać się na zasadzie zerowania usuwanych relacji `nullify delete rule`, zasadniczo unieważniając odniesienie powiązanego modelu do usuniętego modelu. Definiując tę regułę usuwania, gwarantujemy, że w przypadku usunięcia książki nie zostanie usunięta kategoria gatunku.
 
 
+
+```swift
+import Foundation
+import SwiftData
+
+@Model
+final class Book {
+    ...
+    
+    @Relationship(deleteRule: .nullify, inverse: \Genre.books)
+    var genres = [Genre]()
+    
+    init(title: String, author: String, publishedYear: Int) {
+     ...
+    }
+}
+```
+
+
+
+### Lista gatunków literackich `GenreListView`
+
+Dodajmy widok pokazujący wszystkie gatunki. Będziemy używać makra `Query` do pobrania rekordów przechowywanych w tabeli `Genre`.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreListView: View {
+    
+    @Query(sort: \Genre.name) private var genres: [Genre]
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(genres) { genre in
+                    Text(genre.name)
+                }
+            }
+            .navigationTitle("Literary Genres")
+        }
+    }
+}
+
+#Preview {
+    GenreListView()
+}
+```
+
+Następnie dodamy ten widok do ContentView. Nasza aplikacja wyświetli książki i gatunki w widoku TabView.
+
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        TabView {
+            BookListView()
+                .tabItem {
+                    Image(systemName: "books.vertical.fill")
+                    Text("Books")
+                }
+            GenreListView()
+                .tabItem {
+                    Image(systemName: "gear.circle")
+                    Text("Genre")
+                }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
+```
+
+
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-18_21.04.33](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-18_21.04.33-2930043.gif)
+
+### Dodawanie gatunków literackich `AddNewGenre`
+
+Następnie dodamy widok umożliwiający utworzenie nowej kategorii gatunku. Ten widok będzie prezentowany jako dolny arkusz i będzie miał pojedynczy widok TextField, w którym można dodać nowy gatunek.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct AddNewGenre: View {
+    @State private var name: String = ""
+    
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            VStack {
+                TextField("Add New Genre", text: $name)
+                    .textFieldStyle(.roundedBorder)
+                    .navigationTitle("Add New Genre")
+                    .padding(.horizontal)
+                
+                HStack {
+                    Button("Save") {
+                        let genre = Genre(name: name)
+                        context.insert(genre)
+                        do {
+                            try context.save()
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .buttonStyle(.bordered)
+                }
+                
+                Spacer()
+            }
+        }
+    }
+}
+
+#Preview {
+    AddNewGenre()
+}
+```
+
+Dodajmy punkt uruchamiania widoku `AddNewGenre`. Uruchomimy ten widok z `GenreListView`, więc dodajmy zaraz po navigationTitle nowy `ToolBarItem`.
+
+```swift
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button{
+                        presentAddNew.toggle()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .sheet(isPresented: $presentAddNew, content: {
+                        AddNewGenre()
+                            .presentationDetents([.fraction(0.3)])
+                            .interactiveDismissDisabled()
+                    })
+                }
+            }
+```
+
+ Deklarujemy też zmienną `presentAddNew` sterująca pokazywaniem arkusza do wprowadzania gatunku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreListView: View {
+    
+    ...
+    
+    @State private var presentAddNew = false
+    
+    var body: some View {
+        NavigationStack {
+            ...
+            .navigationTitle("Literary Genres")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button{
+                        presentAddNew.toggle()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .sheet(isPresented: $presentAddNew, content: {
+                        AddNewGenre()
+                            .presentationDetents([.fraction(0.3)])
+                            .interactiveDismissDisabled()
+                    })
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    GenreListView()
+}
+```
+
+Dodajmy od razu funkcjonalnośc usuwania rekordów z listy:
+
+1. Będziemy potrzebować dostępu do kontekstu modelu w GenreListView, aby wykonać operację usuwania. 
+
+   - ```swift
+     @Environment(\.modelContext) private var context
+     ```
+
+     
+
+2. Następnie dodamy prywatną funkcję usuwania gatunku z listy
+
+   - ```swift
+     private func deleteGenre(indexSet: IndexSet) {
+             indexSet.forEach { index in
+                 let genreToDelete = genres[index]
+                 context.delete(genreToDelete)
+                 do {
+                     try context.save()
+                 } catch {
+                     print(error.localizedDescription)
+                 }
+             }
+         }
+     ```
+
+     
+
+3. Wywołajmy tę funkcję za pomocą modyfikatora onDelete w widoku ForEach.
+
+   - ```swift
+         var body: some View {
+             NavigationStack {
+                 List {
+                     ForEach(genres) { genre in
+                         Text(genre.name)
+                     }
+                     .onDelete(perform: deleteGenre(indexSet:))
+                 }
+                 ...
+             }
+         }
+     ```
+
+     
+
+   ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-18_21.20.31](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-18_21.20.31-2930934.gif)
