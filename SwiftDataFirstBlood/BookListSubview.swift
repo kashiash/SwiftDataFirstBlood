@@ -24,14 +24,22 @@ struct BookListSubview: View {
     }
 
     var body: some View {
-        List {
-            ForEach(books) { book in
-                NavigationLink(value: book) {
-                    BookCellView(book: book)
-                }
+        Group {
+            if !books.isEmpty {
+                List {
+                    ForEach(books) { book in
+                        NavigationLink(value: book) {
+                            BookCellView(book: book)
+                        }
 
+                    }
+                    .onDelete(perform: delete(indexSet:))
+                }
+            } else if searchTerm.isEmpty {
+                ContentUnavailableView("No Books, yet", systemImage: "square.stack.3d.up.slash.fill")
+            } else {
+                ContentUnavailableView("Try new search term", systemImage: "arrow.counterclockwise")
             }
-            .onDelete(perform: delete(indexSet:))
         }
     }
 

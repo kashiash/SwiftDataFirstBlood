@@ -17,17 +17,23 @@ struct GenreListSubview: View {
     }
 
     var body: some View {
-        List {
-            ForEach(genres) { genre in
-                NavigationLink(value: genre) {
-                    Text(genre.name)
-                }
-                .navigationDestination(for: Genre.self) { genre in
-                    GenreDetailView(genre: genre)
-                }
-            }
-            .onDelete(perform: deleteGenre(indexSet:))
+        Group {
+            if !genres.isEmpty {
+                List {
+                    ForEach(genres) { genre in
+                        NavigationLink(value: genre) {
+                            Text(genre.name)
+                        }
+                        .navigationDestination(for: Genre.self) { genre in
+                            GenreDetailView(genre: genre)
+                        }
+                    }
+                    .onDelete(perform: deleteGenre(indexSet:))
 
+                }
+            } else {
+                ContentUnavailableView("Time to add new Genre!", systemImage: "square.3.layers.3d.down.left.slash")
+            }
         }
     }
 

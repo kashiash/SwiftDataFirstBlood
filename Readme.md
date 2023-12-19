@@ -3162,3 +3162,184 @@ struct BookCellView: View {
 }
 ```
 
+
+
+### Pokażmy użytkownikowi co ma robić. `ContentUnavailableView`
+
+
+
+Aplikacja działa prawidłowo, ale brakuje w niej dość istotnego komponentu. Jeśli użytkownik wyląduje na pierwszym ekranie zaraqz po instalacji programu, zobaczy pusty ekran.
+
+Możemy to poprawić, zapewniając pusty stan, aby wyeliminować wszelkie nieporozumienia dotyczące dostępności danych.
+W tym scenariuszu użyjemy nowo wprowadzonego `ContentUnavailableView`.
+Otwórz `BookListSubview` i dodaj widok grupowy wokół widoku listy, abyśmy mogli dodać sprawdzanie warunkowe w celu wyświetlenia widoku `ContentUnavailableView`.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListSubview: View {
+    ...
+    
+    var body: some View {
+        Group {
+            List {
+                ForEach(books) { book in
+                    NavigationLink(value: book) {
+                        BookCellView(book: book)
+                    }
+                   
+                }
+                .onDelete(perform: delete(indexSet:))
+            }
+...
+```
+
+Sprawdzimy kolekcje książek i jeśli nie jest pusta, pokażemy widok listy, aby wyrenderować wszystkie książki.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListSubview: View {
+    ...
+    
+    var body: some View {
+        Group {
+            if !books.isEmpty {
+                List {
+                    ForEach(books) { book in
+                        NavigationLink(value: book) {
+                            BookCellView(book: book)
+                        }
+                       
+                    }
+                    .onDelete(perform: delete(indexSet:))
+                }
+            }
+
+...
+```
+
+W drugiej części dodamy ContentUnavailableView, który wyrenderuje pusty widok stanu, gdy tablica książek będzie pusta.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListSubview: View {
+    ...
+    
+    var body: some View {
+        Group {
+            if !books.isEmpty {
+                List {
+                    ForEach(books) { book in
+                        NavigationLink(value: book) {
+                            BookCellView(book: book)
+                        }
+                       
+                    }
+                    .onDelete(perform: delete(indexSet:))
+                }
+            } else {
+                ContentUnavailableView("No Books, yet", systemImage: "square.stack.3d.up.slash.fill")
+            }
+...
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-20_00.05.51](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-20_00.05.51-3027223.gif)
+
+Jeśli przeprowadzimy wyszukiwanie za pomocą pola wyszukiwania u góry, zobaczymy, że tam również pojawi się pusty ekran. Nie oznacza to jednak prawidłowego celu wyszukiwania. Ponieważ szukamy, stwierdzenie"No Books, yet" nie ma sensu, więc udoskonalmy naszą logikę, dodając kolejną instrukcję warunkową.
+Pokażemy dwa różne ContentUnavailableView
+• Dla stanu pustego, gdy searchTerm jest pusty i w tablicy książek nie ma żadnych książek
+• W przypadku pustego wyniku wyszukiwania, gdy searchTerm jest obecny, ale nie daje żadnych wyników.
+
+
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListSubview: View {
+    ...
+    
+    var body: some View {
+        Group {
+            if !books.isEmpty {
+                List {
+                    ...
+                }
+            } else if searchTerm.isEmpty {
+                ContentUnavailableView("No Books, yet", systemImage: "square.stack.3d.up.slash.fill")
+            } else {
+                ContentUnavailableView("Try new search term", systemImage: "arrow.counterclockwise")
+            }
+        }
+    }
+```
+
+
+
+
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-20_00.11.01](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-20_00.11.01-3027543.gif)
+
+
+
+`ContentUnavailableView` udostępnia wbudowaną funkcję pokazywania pustego stanu podczas wyszukiwania, więc wykorzystajmy ją zamiast naszego niestandardowego.
+
+
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListSubview: View {
+    ...
+    
+    var body: some View {
+        Group {
+            if !books.isEmpty {
+                List {
+                    ...
+                }
+            } else if searchTerm.isEmpty {
+                ContentUnavailableView("No Books, yet", systemImage: "square.stack.3d.up.slash.fill")
+            } else {
+                  ContentUnavailableView.search(text: searchTerm)
+            }
+        }
+    }
+```
+
+Nasz ekran gatunku również może zostać zmodyfikowany, więc dodajmy także dla tego widoku `ContentUnavailableView`.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreListSubview: View {
+    ...
+    
+    var body: some View {
+        Group {
+            if !genres.isEmpty {
+                List {
+                    ForEach(genres) { genre in
+                        NavigationLink(value: genre) {
+                            Text(genre.name)
+                        }
+                        .navigationDestination(for: Genre.self) { genre in
+                            GenreDetailView(genre: genre)
+                        }
+                    }
+                    .onDelete(perform: deleteGenre(indexSet:))
+                }
+            } else {
+                ContentUnavailableView("Time to add new Genre!", systemImage: "square.3.layers.3d.down.left.slash")
+            }
+        }
+    }
+```
+
