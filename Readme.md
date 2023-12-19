@@ -2234,7 +2234,7 @@ struct BookCellView: View {
 
 ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.24.38](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.24.38-2988751.gif)
 
-### Dodawanie okładek w istneijących książkach - `BookDetailView`
+### Dodawanie okładek w istniejących książkach - `BookDetailView`
 
 Teraz dodamy obsługę dodawania obrazu do istniejącego wpisu w książce w widoku `BookDetailView`.
 
@@ -2575,3 +2575,49 @@ Uruchomienie aplikacji teraz spowoduje wydrukowanie lokalizacji w konsoli.
 np DataStore is located at file:.../Library/Developer/CoreSimulator/Devices/<<path>>/default.store
 
 Możemy używać aplikacji takich jak SQLiteBrowser (https://sqlitebrowser.org/), aby sprawdzić schemat i dane w pliku default.store.
+
+## Rozbudowa funkcjonalności aplikacji
+
+Postęp w naszej aplikacji jest jak dotąd całkiem obiecujący, ale obecnie brakuje kluczowej funkcji, a mianowicie możliwości wyszukiwania książek na naszej liście lektur. Ta szczególna cecha jest istotna z kilku powodów:
+
+1. Wygoda użytkownika: Możliwość wyszukiwania książek na liście lektur jest kluczowym elementem wygody użytkownika. W miarę powiększania się listy lektur użytkownicy mogą mieć coraz większe trudności ze znalezieniem konkretnej książki ręcznie, zwłaszcza jeśli na liście znajduje się znaczna liczba tytułów. Funkcja wyszukiwania upraszcza ten proces, umożliwiając użytkownikom szybkie znalezienie książki, której szukają.
+2. Wydajność: bez funkcji wyszukiwania może być konieczne przewinięcie całej listy lektur, aby znaleźć książkę. Może to być czasochłonne i frustrujące, szczególnie gdy lista jest długa. Funkcja wyszukiwania znacznie poprawia wydajność aplikacji, oszczędzając czas i wysiłek użytkowników.
+3. Lepsze doświadczenie użytkownika: Funkcja wyszukiwania jest podstawowym aspektem poprawiającym ogólne doświadczenie użytkownika. Użytkownicy chętniej korzystają z aplikacji, która oferuje im funkcje ułatwiające życie i nadal z nich korzystają.
+
+### Wyszukiwanie w `BookListView`
+
+Dodajmy więc funkcję wyszukiwania do naszego `BookListView`. Zaczniemy od stworzenia właściwości stanu, aby powiązać tekst wyszukiwania z polem wyszukiwania.
+
+```swift
+ @State private var searchTerm: String = ""
+```
+
+Stworzymy nową obliczoną właściwość o nazwie „filteredBooks”. Ta zmienna będzie udostępniać kolekcję książek na podstawie podanego wyszukiwanego hasła. Jeśli wyszukiwane hasło jest puste, właściwość wyświetli wszystkie pobrane książki. I odwrotnie, jeśli zostanie określone wyszukiwane hasło, wyszukiwanie zostanie przeprowadzone poprzez porównanie tytułów książek w celu przefiltrowania i dostarczenia odpowiednich książek.
+
+```swift
+struct BookListView: View {
+    ...
+    
+    @State private var searchTerm: String = ""
+    var filteredBooks: [Book] {
+        guard searchTerm.isEmpty == false else { return books }
+        return books.filter { $0.title.localizedCaseInsensitiveContains(searchTerm) }
+    }
+```
+
+W polu wyszukiwania użyjemy modyfikatora listy `searchable`. Modyfikator z możliwością przeszukiwania dodaje interfejs wyszukiwania do Twojej aplikacji, stosując jeden z modyfikatorów widoku z możliwością wyszukiwania — na przykład `searchable(text:placement:prompt:)` — do `NavigationSplitView` lub `NavigationStack`, lub do widoku wewnątrz jednego z nich. Następnie na pasku narzędzi pojawi się pole wyszukiwania. Dodatkowo zmianiamy wewnątrz listy, aby pętla ForEach używała odfiltrowanej tablicy książek:  `ForEach(filteredBooks)`
+
+```swift
+struct BookListView: View {
+    ...
+    
+    var body: some View {
+        NavigationStack {
+            List {
+              ForEach(filteredBooks) { book in
+               ...
+            }
+            .searchable(text: $searchTerm, prompt: "Search book title")
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_15.15.00](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_15.15.00-2995336-2995337-2995339.gif)
