@@ -18,7 +18,11 @@ Aby lepiej zrozumieć to zagadnienie, skoncentrujmy się na stworzeniu aplikacji
 
 
 
+![image-20231220002029275](image-20231220002029275.png)
 
+
+
+![image-20231220002108466](image-20231220002108466.png)
 
 ## Model `Book`
 
