@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct AddNewBookView: View {
     @Environment(\.modelContext) private var context
@@ -17,6 +18,9 @@ struct AddNewBookView: View {
     @State private var publishedYear: Int?
 
     @State private var selectedGenres = Set<Genre>()
+
+    @State private var selectedCover: PhotosPickerItem?
+    @State private var selectedCoverData: Data?
 
     var body: some View {
 
@@ -31,6 +35,33 @@ struct AddNewBookView: View {
                     .textFieldStyle(
                         .roundedBorder)
 
+                HStack {
+                      PhotosPicker(
+                          selection: $selectedCover,
+                          matching: .images,
+                          photoLibrary: .shared()
+                      ) {
+                          Label("Add Cover", systemImage: "book.closed")
+                      }
+                      .padding(.vertical)
+
+                      Spacer()
+
+                      if let selectedCoverData,
+                            let image = UIImage(
+                            data: selectedCoverData) {
+                          Image(uiImage: image)
+                         .resizable()
+                         .scaledToFit()
+                         .clipShape(.rect(cornerRadius: 10))
+                         .frame(width: 100, height: 100)
+                      } else {
+                          Image(systemName: "photo")
+                              .resizable()
+                              .scaledToFit()
+                              .frame(width: 100, height: 100)
+                      }
+                  }
                 Text("Published:")
                 TextField(
                     "Enter published year",
@@ -55,6 +86,10 @@ struct AddNewBookView: View {
                         guard let publishedYear = publishedYear else { return }
                         let book = Book(title: title, author: author, publishedYear: publishedYear)
 
+                        if let selectedCoverData {
+                          book.cover = selectedCoverData
+                        }
+                        
                         book.genres = Array(selectedGenres)
                         selectedGenres.forEach { genre in
                             genre.books.append(book)
@@ -78,6 +113,11 @@ struct AddNewBookView: View {
             }
             .padding()
             .navigationTitle("Add New Book")
+            .task(id: selectedCover) {
+                if let data = try? await selectedCover?.loadTransferable(type: Data.self) {
+                    selectedCoverData = data
+                }
+            }
         }
     }
 

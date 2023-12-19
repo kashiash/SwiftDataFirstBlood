@@ -1862,3 +1862,331 @@ struct GenreDetailView: View {
 ```
 
 ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.45.58](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.45.58-2979233.gif)
+
+## Okładka książki - przechowywanie zdjęć
+
+
+
+Zmiana jest immanentną cechą używanego systemu informatycznego, więc zobaczmy, jak SwiftData radzi sobie ze zmianą. Nasza aplikacja wygląda dobrze, ale brakuje w niej okładek książek, więc je dodajmy.
+
+### Modyfikacja modelu `Book`
+
+Zaczniemy od nowego pola w modelu `Book`. Ponieważ mamy do czynienia z obrazami, będziemy je przechowywać jako typ `Data`.
+
+```swift
+import Foundation
+import SwiftData
+
+@Model
+final class Book {
+    var title: String
+    var author: String
+    var publishedYear: Int
+    
+    var cover: Data?
+```
+
+
+
+*Ta właściwość jest oznaczona jako opcjonalna, ponieważ dodajemy nowy atrybut do naszej istniejącej aplikacji, a ta zmiana nie powinna mieć wpływu na wcześniej zapisane dane, o ile dodajemy nową właściwość jako opcjonalną lub z wartością domyślną.*
+
+Obrazy są duże i nie jest dobrym pomysłem przechowywanie ich bezpośrednio w magazynie danych (ze względu na problemy z wydajnością) możemy zdecydować się na przechowywanie tylko odniesienia do obrazu, a rzeczywiste dane obrazu można umieścić gdzie indziej na dysku. Nie musimy tego robić również ręcznie, możemy wykorzystać atrybut makro SwiftData i zdefiniować konfigurację schematu w celu przechowywania danych binarnych obrazu na zewnątrz.
+
+```swift
+@Model
+final class Book {
+    ...
+    
+    @Attribute(.externalStorage)
+    var cover: Data?
+```
+
+Dzięki tej zmianie jesteśmy gotowi na przechowywanie okładek książek.
+
+### Modyfikacja okna dodawania książek `AddNewBookView`
+
+Zaktualizujmy widok `AddNewBook`, aby uwzględnić selektor zdjęć, dzięki któremu użytkownicy będą mogli wybierać okładki książek ze swojej biblioteki zdjęć.
+Najpierw zaimportuj moduł `PhotosUI`.
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct AddNewBookView: View {
+```
+
+Dodaj dwie nowe właściwości State, jedną do powiązania z selektorem zdjęć, a drugą do przechowywania postaci danych wybranego obrazu.
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct AddNewBookView: View {
+    ...
+    
+    @State private var selectedCover: PhotosPickerItem?
+    @State private var selectedCoverData: Data?
+```
+
+Dodajmy interfejs użytkownika, aby wybrać zdjęcia.
+
+```swift
+                HStack {
+                    PhotosPicker(
+                        selection: $selectedCover,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        Label("Add Cover", systemImage: "book.closed")
+                    }
+                    .padding(.vertical)
+                    
+                    Spacer()
+                    
+                    if let selectedCoverData {
+
+                    } else {
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                    }
+                }
+```
+
+Umieszamy to pod  `Text("Author:")` w `AddNewBookView`
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct AddNewBookView: View {
+    ...
+    
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading) {
+                Text("Book title:")
+                ...
+                
+                HStack {
+                    PhotosPicker(
+                        selection: $selectedCover,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        Label("Add Cover", systemImage: "book.closed")
+                    }
+                    .padding(.vertical)
+                    
+                    Spacer()
+                    
+                    if let selectedCoverData {
+
+                    } else {
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                    }
+                }
+                
+                Text("Published:")
+...
+```
+
+powyzszy kod pozwoli nam wybrac zdjęcie z biblioteki zdjęć w telefonie:
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_11.47.55](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_11.47.55-2982930.gif)
+
+
+
+Zanim wyświetlimy wybrany obraz, pobierzmy jego dane binarne i wypełnijmy nasze wybraneCoverData. Ta operacja ma charakter asynchroniczny, dlatego użyjemy zadania, aby wyodrębnić dane z wybranego zdjęcia.
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct AddNewBookView: View {
+    ...
+            .navigationTitle("Add New Book")
+            .task(id: selectedCover) {
+                if let data = try? await selectedCover?.loadTransferable(type: Data.self) {
+                    selectedCoverData = data
+                }
+            }
+        }
+    }
+}
+```
+
+*Zauważ, że używamy funkcji `loadingTransferable` z elementem `photoPickerItem`. Ta funkcja daje nam możliwość konwersji podstawowych danych, a ponieważ `photoPickerItem` jest zgodny z protokołem Transferable, umożliwia naszemu modelowi zaangażowanie się w proces udostępniania i przesyłania danych*
+
+Teraz, gdy mamy już dane w naszym `SelectCoverData`, wrócimy do sekcji selektora i dodamy kod wyświetlający wybrany obraz.
+
+```swift
+if let selectedCoverData, 
+let image = UIImage(
+  data: selectedCoverData) {
+  Image(uiImage: image)
+  .resizable()
+  .scaledToFit()
+  .clipShape(.rect(cornerRadius: 10))
+  .frame(width: 100, height: 100)
+
+}
+```
+
+Zaktualizujmy akcję przycisku Zapisz, aby obsłużyć zapis obrazu okładki książki.
+
+```swift
+Button("Save") {
+  ...
+  book.genres = Array(selectedGenres)
+
+  if let selectedCoverData {
+    book.cover = selectedCoverData
+  }
+
+  selectedGenres.forEach { genre in
+                          genre.books.append(book)
+                          context.insert(genre)
+                         }
+```
+
+kod widoku po zmianach: 
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct AddNewBookView: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title: String = ""
+    @State private var author: String = ""
+    @State private var publishedYear: Int?
+
+    @State private var selectedGenres = Set<Genre>()
+
+    @State private var selectedCover: PhotosPickerItem?
+    @State private var selectedCoverData: Data?
+
+    var body: some View {
+
+        NavigationStack {
+            VStack( alignment: .leading){
+                Text("Book title:")
+                TextField("Enter title",text: $title)
+                    .textFieldStyle(.roundedBorder)
+
+                Text("Author:")
+                TextField("Enter book author",text: $author)
+                    .textFieldStyle(
+                        .roundedBorder)
+
+                HStack {
+                      PhotosPicker(
+                          selection: $selectedCover,
+                          matching: .images,
+                          photoLibrary: .shared()
+                      ) {
+                          Label("Add Cover", systemImage: "book.closed")
+                      }
+                      .padding(.vertical)
+
+                      Spacer()
+
+                      if let selectedCoverData,
+                            let image = UIImage(
+                            data: selectedCoverData) {
+                          Image(uiImage: image)
+                         .resizable()
+                         .scaledToFit()
+                         .clipShape(.rect(cornerRadius: 10))
+                         .frame(width: 100, height: 100)
+                      } else {
+                          Image(systemName: "photo")
+                              .resizable()
+                              .scaledToFit()
+                              .frame(width: 100, height: 100)
+                      }
+                  }
+                Text("Published:")
+                TextField(
+                    "Enter published year",
+                    value: $publishedYear,
+                    format: .number
+                )
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.numberPad)
+
+                GenreSelectionView(selectedGenres: $selectedGenres)
+
+                HStack {
+
+                    Button("Cancel", role: .destructive) {
+                        dismiss()
+                    }
+                    .buttonStyle(.bordered)
+
+                    Spacer()
+
+                    Button("Save") {
+                        guard let publishedYear = publishedYear else { return }
+                        let book = Book(title: title, author: author, publishedYear: publishedYear)
+
+                        if let selectedCoverData {
+                          book.cover = selectedCoverData
+                        }
+                        
+                        book.genres = Array(selectedGenres)
+                        selectedGenres.forEach { genre in
+                            genre.books.append(book)
+                            context.insert(genre)
+                        }
+
+                        context.insert(book)
+
+                        do {
+                            try context.save()
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+
+                        dismiss()
+                    }
+                    .buttonStyle( .bordered )
+                    .disabled(!isFormValid)
+                }
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Add New Book")
+            .task(id: selectedCover) {
+                if let data = try? await selectedCover?.loadTransferable(type: Data.self) {
+                    selectedCoverData = data
+                }
+            }
+        }
+    }
+
+    private var isFormValid: Bool {
+        !title.isEmpty && !author.isEmpty && publishedYear != nil
+    }
+}
+
+#Preview {
+    AddNewBookView()
+        .modelContainer(for: [Book.self])
+}
+
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.05.19](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.05.19-2987595.gif)
