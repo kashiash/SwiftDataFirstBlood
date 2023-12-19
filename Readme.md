@@ -1,5 +1,7 @@
 # SwiftData pierwsze kroki
 
+[TOC]
+
 
 
 ## Wstęp
@@ -2190,3 +2192,44 @@ struct AddNewBookView: View {
 ```
 
 ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.05.19](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.05.19-2987595.gif)
+
+Nasza aplikacja rozwija się całkiem nieźle. Dodaliśmy funkcję zapisywania okładek książek, ale nadal musimy zaimplementować metodę weryfikacji, czy okładkę można pobrać z dysku. Skupmy się na włączeniu zapisanej okładki książki do `BookListView` i wyświetleniu jej obok odpowiedniej książki.
+
+### Wyświetlanie obrazu w liscie książek `BookCellView`
+
+Ponieważ większość naszej logiki wyświetlania należy do BookCellView, zaktualizujemy to, aby uwzględnić pobrany obraz z bazy danych.
+
+```swift
+struct BookCellView: View {
+    let book: Book
+    
+    var body: some View {
+        NavigationLink(value: book) {
+            HStack(alignment: .top) {
+                if let cover = book.cover, let image = UIImage(data: cover) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(.rect(cornerRadius: 5))
+                        .frame(height: 100)
+                }
+                VStack(alignment: .leading) {
+                    Text(book.title)
+                        .bold()
+                    Group {
+                        Text("Author: \(book.author)")
+                        Text("Published on: \(book.publishedYear.description)")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .navigationDestination(for: Book.self) { book in
+            BookDetailView(book: book)
+        }
+    }
+}
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.24.38](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.24.38-2988751.gif)
