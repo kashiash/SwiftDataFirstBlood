@@ -15,6 +15,9 @@ struct AddNewBookView: View {
     @State private var title: String = ""
     @State private var author: String = ""
     @State private var publishedYear: Int?
+
+    @State private var selectedGenres = Set<Genre>()
+
     var body: some View {
 
         NavigationStack {
@@ -37,6 +40,8 @@ struct AddNewBookView: View {
                 .textFieldStyle(.roundedBorder)
                 .keyboardType(.numberPad)
 
+                GenreSelectionView(selectedGenres: $selectedGenres)
+
                 HStack {
 
                     Button("Cancel", role: .destructive) {
@@ -49,6 +54,12 @@ struct AddNewBookView: View {
                     Button("Save") {
                         guard let publishedYear = publishedYear else { return }
                         let book = Book(title: title, author: author, publishedYear: publishedYear)
+
+                        book.genres = Array(selectedGenres)
+                        selectedGenres.forEach { genre in
+                            genre.books.append(book)
+                            context.insert(genre)
+                        }
 
                         context.insert(book)
 

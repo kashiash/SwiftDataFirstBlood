@@ -21,11 +21,15 @@ struct BookDetailView: View {
 
     @State private var showAddNewNote = false
 
+    @State private var selectedGenres = Set<Genre>()
+
     init(book: Book) {
         self.book = book
         self._title = State(initialValue: book.title)
         self._author = State(initialValue: book.author)
         self._publishedYear = State(initialValue: book.publishedYear)
+
+        self._selectedGenres = State.init(initialValue: Set(book.genres))
     }
 
     var body: some View {
@@ -36,12 +40,51 @@ struct BookDetailView: View {
                     TextField("Book author", text: $author)
                     TextField("Published year", value: $publishedYear, formatter: NumberFormatter())
                         .keyboardType(.numberPad)
+
+                    GenreSelectionView(selectedGenres: $selectedGenres)
+                                            .frame(height: 300)
                 }
                 .textFieldStyle(.roundedBorder)
+
+                Button("Save") {
+                    guard let publishedYear = publishedYear else { return }
+                    book.title = title
+                    book.author = author
+                    book.publishedYear = publishedYear
+
+                    book.genres = []
+                    book.genres = Array(selectedGenres)
+                    selectedGenres.forEach { genre in
+                        if !genre.books.contains(where: { b in
+                            b.title == book.title
+                        }) {
+                            genre.books.append(book)
+                        }
+                    }
+
+                    do {
+                        try context.save()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+
+                    dismiss()
+                }
             } else {
                 Text(book.title)
                 Text(book.author)
                 Text(book.publishedYear.description)
+
+                if !book.genres.isEmpty {
+                    HStack {
+                        ForEach(book.genres) { genre in
+                            Text(genre.name)
+                                .font(.caption)
+                                .padding(.horizontal)
+                                .background(.green.opacity(0.3), in: Capsule())
+                        }
+                    }
+                }
             }
             Section("Notes") {
                 Button("Add new note") {

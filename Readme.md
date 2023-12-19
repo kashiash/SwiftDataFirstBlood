@@ -16,6 +16,8 @@ Aby lepiej zrozumieć to zagadnienie, skoncentrujmy się na stworzeniu aplikacji
 
 
 
+
+
 ## Model `Book`
 
 Rozpoczniemy od modelu danych. Nasz model do przechowywania informacji o książkach, będzie nosił nazwę "Book".
@@ -1059,6 +1061,8 @@ struct AddNewNote: View {
 
 ### Lista notatek w książce `NotesListView`
 
+![RocketSim_Screenshot_iPhone_15_Pro_Max_6.7_2023-12-18_21.35.49](RocketSim_Screenshot_iPhone_15_Pro_Max_6.7_2023-12-18_21.35.49-2931792.jpeg)
+
 Dodajemy widok do wyświetlania listy naszych notatek `NotesListView`:
 
 Obiekt książki zostanie przekazany jako parametr wejściowy tego widoku, a my użyjemy widoku List i ForEach do wyrenderowania listy notatek na temat książki.
@@ -1518,3 +1522,342 @@ Dodajmy od razu funkcjonalnośc usuwania rekordów z listy:
      
 
    ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-18_21.20.31](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-18_21.20.31-2930934.gif)
+
+### Przypisywanie gatunków do książki 
+
+Teraz, gdy mamy funkcjonalne widoki na książki i gatunki, czas połączyć je w całość.
+Zaczniemy od utworzenia nowego widoku `GenreSelectionView`, do renderowania elementów sterujących wyborem gatunku, co pozwoli nam uwzględnić ten widok jako widok podrzędny w widoku `AddNewBookView`. Użyjemy makra `Query`, aby pobrać wszystkie rekordy z gatunku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreSelectionView: View {
+    @Query(sort: \Genre.name) private var genres: [Genre]
+```
+
+Potrzebujemy również zmiennej do przechowywania wszystkich wybranych wartości, dodamy jej atrybut Binding, aby utworzyć dwukierunkowe połączenie między właściwością przechowującą dane a UI.
+Ponieważ książka może należeć do wielu gatunków jednocześnie, utworzymy wybrane gatunki jako typ `Set<Genre>`.
+
+```swift
+struct GenreSelectionView: View {
+    @Query(sort: \Genre.name) private var genres: [Genre]
+    @Binding var selectedGenres: Set<Genre>
+```
+
+Wyświetlimy gatunki w widoku listy i wyświetlimy pole wyboru obok nazwy gatunku, aby pokazać wybór. Dodamy także `onTapGesture` do zaznaczania i odznaczania gatunku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreSelectionView: View {
+    @Query(sort: \Genre.name) private var genres: [Genre]
+    @Binding var selectedGenres: Set<Genre>
+
+    var body: some View {
+        List {
+            Section("Literary Genres") {
+                ForEach(genres) { genre in
+                    HStack {
+                        Text(genre.name)
+                        Spacer()
+                        Image(systemName: selectedGenres.contains(genre) ? "checkmark.circle.fill" : "circle.dashed")
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if !selectedGenres.contains(genre) {
+                            selectedGenres.insert(genre)
+                        } else {
+                            selectedGenres.remove(genre)
+                        }
+                    }
+                }
+            }
+
+        }
+        .listStyle(.plain)
+    }
+}
+```
+
+Dodajmy ten widok do `AddNewBookView`. Zaczniemy od dodania najpierw właściwości State, aby zapewnić powiązanie dla wybranych gatunków.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct AddNewBookView: View {
+    ...
+    
+    @State private var selectedGenres = Set<Genre>()
+```
+
+Następnie dodamy `GenreSelectionView` bezpośrednio nad przyciskami anulowania i zapisu w widoku `AddNewBookView`.
+
+```swift
+struct AddNewBookView: View {
+    ...
+    
+    @State private var selectedGenres = Set<Genre>()
+    
+    ...
+    
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading) {
+                ...
+                
+                GenreSelectionView(selectedGenres: $selectedGenres)
+                
+                HStack {
+                   ...
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!isValid)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Add New Book")
+        }
+    }
+}
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_09.46.22](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_09.46.22-2975685.gif)
+
+Chcemy także mieć pewność, że zapiszemy wybrane gatunki wraz z książką i gatunkiem powiązanym z książką, dlatego zaktualizujmy działanie przycisku zapisu, aby uwzględnić tę opcję. Poniższy kod dodajmy przed `context.insert(book)` 
+
+```swift
+book.genres = Array(selectedGenres)
+selectedGenres.forEach { genre in
+                        genre.books.append(book)
+                        context.insert(genre)
+                       }
+```
+
+Po zapisaniu gatunku potrzebujemy sposobu, aby wyświetlić go razem z książką, więc popracujmy nad tym dalej.
+Otwórzmy `BookDetailView` i pod szczegółami książki dodajmy `HStack`, aby pokazać gatunek powiązany z książką.
+
+```swift
+import SwiftUI
+
+struct BookDetailView: View {
+    ...
+    var body: some View {
+        Form {
+            if isEditing {
+                ...
+            } else {
+                Text(book.title)
+                Text(book.author)
+                Text(book.publishedYear.description)
+
+                if !book.genres.isEmpty {
+                    HStack {
+                        ForEach(book.genres) { genre in
+                            Text(genre.name)
+                                .font(.caption)
+                                .padding(.horizontal)
+                                .background(.green.opacity(0.3), in: Capsule())
+                        }
+                    }
+                }
+            }
+            ...
+    }
+}
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_09.56.57](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_09.56.57-2976281.gif)
+
+Mamy możliwość dodania gatunku do nowej książki, ale co z istniejącymi książkami, które zostały dodane przed tą zmianą? Cóż, dodajmy tę funkcjonalność, aktualizując BookDetailView.
+Zaczniemy od utworzenia właściwości State do przechowywania wybranych gatunków.
+
+```swift
+struct BookDetailView: View {
+    ...
+    
+    @State private var selectedGenres = Set<Genre>()
+```
+
+Książka może już należeć do gatunku, więc musimy zachować te wybory, więc zaktualizujmy init, aby uwzględnić wcześniej wybrane gatunki w zmiennej wybranego gatunku.
+
+```swift
+struct BookDetailView: View {
+    ...
+    
+    @State private var selectedGenres = Set<Genre>()
+    
+    init(book: Book) {
+       ...
+        self._selectedGenres = State.init(initialValue: Set(book.genres))
+    }
+```
+
+Następnie dodamy `GenreSelectionView` w stanie edycji dla widoku i zaktualizujemy funkcję zapisywania, aby zapisać wybór użytkownika.
+
+```swift
+import SwiftUI
+
+struct BookDetailView: View {
+   ...
+    @State private var selectedGenres = Set<Genre>()
+    
+    init(book: Book) {
+       ... 
+        self._selectedGenres = State.init(initialValue: Set(book.genres))
+    }
+    
+    var body: some View {
+        Form {
+            if isEditing {
+                Group {
+                    TextField("Book title", text: $title)
+                    TextField("Book author", text: $author)
+                    TextField("Published year", value: $publishedYear, formatter: NumberFormatter())
+                        .keyboardType(.numberPad)
+                    
+                    GenreSelectionView(selectedGenres: $selectedGenres)
+                        .frame(height: 300)
+                }
+                .textFieldStyle(.roundedBorder)
+                Button("Save") {
+                    guard let publishedYear = publishedYear else { return }
+                    book.title = title
+                    book.author = author
+                    book.publishedYear = publishedYear
+                    
+                    book.genres = []
+                    book.genres = Array(selectedGenres)
+                    selectedGenres.forEach { genre in
+                        if !genre.books.contains(where: { b in
+                            b.title == book.title
+                        }) {
+                            genre.books.append(book)
+                        }
+                    }
+                    ...
+                }
+            } else {
+               ...
+            }
+            ...
+}
+```
+
+z rozpędu dodajmy wyswietlanie gatunków na liscie książek:
+
+```swift
+struct BookCellView: View {
+    let book: Book
+    
+    var body: some View {
+        NavigationLink(value: book) {
+            VStack(alignment: .leading) {
+                Text(book.title)
+                    .bold()
+                HStack {
+                    Text("Author: \(book.author)")
+                    Spacer()
+                    Text("Published on: \(book.publishedYear.description)")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.top, 20)
+
+                if !book.genres.isEmpty {
+                    HStack {
+                        ForEach(book.genres) { genre in
+                            Text(genre.name)
+                                .font(.caption)
+                                .padding(.horizontal)
+                                .background(.green.opacity(0.3), in: Capsule())
+                        }
+                    }
+                }
+            }
+        }
+        .navigationDestination(for: Book.self) { book in
+            BookDetailView(book: book)
+        }
+    }
+}
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.32.24](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.32.24-2978422.gif)
+
+### Lista książek przypisanych do wybranego gatunku `GenreDetailView`
+
+Dla każdej książki podajemy gatunki, ale byłoby lepiej, gdybyśmy mogli zobaczyć także książki w ramach każdego gatunku. Zacznijmy więc od utworzenia nowego widoku SwiftUI zawierającego szczegóły gatunku, nazwijmy go `GenreDetailView`.
+Zaimportujmy także SwiftData.
+Utwórz `let genre: Genre:` właściwość, która będzie używana do przekazywania wybranego przez użytkownika gatunku, którego szczegóły zostaną wyświetlone w widoku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreDetailView: View {
+    let genre: Genre
+    
+    var body: some View {
+        Text("Hello, World!")
+    }
+}
+```
+
+Zaktualizujmy `GenreListView`, aby zawierał link nawigacyjny. Użyjemy tego łącza nawigacyjnego, aby przekazać wybrany przez użytkownika gatunek, aby można go było wykorzystać w widoku szczegółów.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreListView: View {
+    ...
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(genres) { genre in
+                    NavigationLink(value: genre) {
+                        Text(genre.name)
+                    }
+                    .navigationDestination(for: Genre.self) { genre in
+                        GenreDetailView(genre: genre)
+                    }
+                }
+                .onDelete(perform: deleteGenre(indexSet:))
+                
+            }
+.....
+```
+
+Następnie zaktualizujemy `GenreDetailView`, aby wyrenderować listę książek należących do wybranego gatunku. Do wyświetlenia stanu pustego użyjemy `ContentUnavailableView`. Użyjemy widoku listy do renderowania książek w ramach wybranego gatunku i wyświetlimy nazwę wybranego gatunku jako tytuł tego widoku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreDetailView: View {
+    let genre: Genre
+    
+    var body: some View {
+        VStack {
+            Group {
+                if genre.books.isEmpty {
+                    ContentUnavailableView("No data", systemImage: "square.stack.3d.up.slash"
+                    )
+                } else {
+                    List(genre.books) { book in
+                        Text(book.title)
+                    }
+                }
+            }
+            .navigationTitle(genre.name)
+        }
+    }
+}
+```
+

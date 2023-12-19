@@ -23,6 +23,17 @@ struct BookCellView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .padding(.top, 20)
+
+                if !book.genres.isEmpty {
+                    HStack {
+                        ForEach(book.genres) { genre in
+                            Text(genre.name)
+                                .font(.caption)
+                                .padding(.horizontal)
+                                .background(.green.opacity(0.3), in: Capsule())
+                        }
+                    }
+                }
             }
         }
         .navigationDestination(for: Book.self) { book in
