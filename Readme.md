@@ -2233,3 +2233,345 @@ struct BookCellView: View {
 ```
 
 ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.24.38](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.24.38-2988751.gif)
+
+### Dodawanie okładek w istneijących książkach - `BookDetailView`
+
+Teraz dodamy obsługę dodawania obrazu do istniejącego wpisu w książce w widoku `BookDetailView`.
+
+jest ono bardzo poodbne do tego co zrobilismy przy widoku `AddNewBookView`. Zacznijmy od importu PhotosUI wraz z SwiftData oraz dodania właściwości State dla wybranych okładek książek.
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct BookDetailView: View {
+    ...
+    
+    @State private var selectedCover: PhotosPickerItem?
+    @State private var selectedCoverData: Data?
+```
+
+Następnie zaraz za polami tekstowymi z danymi książki, dodamy HStack, aby wyświetlić photoPicker, dzięki czemu użytkownik będzie mógł wybrać okładkę książki.
+
+```swift
+HStack {
+  PhotosPicker(
+    selection: $selectedCover,
+    matching: .images,
+    photoLibrary: .shared()
+  ) {
+    Label("Add Cover", systemImage: "book.closed")
+  }
+  .padding(.vertical)
+
+  Spacer()
+
+  if let selectedCoverData,
+  let image = UIImage(
+    data: selectedCoverData) {
+    Image(uiImage: image)
+    .resizable()
+    .scaledToFit()
+    .clipShape(.rect(cornerRadius: 10))
+    .frame(width: 100, height: 100)
+
+  } else {
+    Image(systemName: "photo")
+    .resizable()
+    .scaledToFit()
+    .frame(width: 100, height: 100)
+  }
+}
+```
+
+Dodajmy `Task` do przetwarzania photoPickerItem do obiektu blob danych, abyśmy mogli go przechowywać za pomocą SwiftData.
+
+```swift
+struct BookDetailView: View {
+   ...
+    
+    var body: some View {
+        Form {
+            ...
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(isEditing ? "Done" : "Edit") {
+                    isEditing.toggle()
+                }
+            }
+        }
+        .task(id: selectedCover) {
+            if let data = try? await selectedCover?.loadTransferable(type: Data.self) {
+                selectedCoverData = data
+            }
+        }
+        .navigationTitle("Book Detail")
+    }
+}
+```
+
+Zaktualizujemy akcję zapisywania, aby uwzględnić okładkę książki.
+
+```swift
+ Button("Save") {
+   ...
+    }
+    
+    if let selectedCoverData {
+        book.cover = selectedCoverData
+    }
+    
+   ...
+```
+
+
+
+calu kod widoku po zmianach: 
+
+```swift
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+
+struct BookDetailView: View {
+    let book: Book
+
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var isEditing = false
+
+    @State private var title: String = ""
+    @State private var author: String = ""
+    @State private var publishedYear: Int? = nil
+
+    @State private var showAddNewNote = false
+
+    @State private var selectedGenres = Set<Genre>()
+
+    @State private var selectedCover: PhotosPickerItem?
+    @State private var selectedCoverData: Data?
+
+    init(book: Book) {
+        self.book = book
+        self._title = State(initialValue: book.title)
+        self._author = State(initialValue: book.author)
+        self._publishedYear = State(initialValue: book.publishedYear)
+
+        self._selectedGenres = State.init(initialValue: Set(book.genres))
+    }
+
+    var body: some View {
+        Form {
+            if isEditing {
+                Group {
+                    TextField("Book title", text: $title)
+                    TextField("Book author", text: $author)
+                    TextField("Published year", value: $publishedYear, formatter: NumberFormatter())
+                        .keyboardType(.numberPad)
+
+                    HStack {
+                        PhotosPicker(
+                            selection: $selectedCover,
+                            matching: .images,
+                            photoLibrary: .shared()
+                        ) {
+                            Label("Add Cover", systemImage: "book.closed")
+                        }
+                        .padding(.vertical)
+
+                        Spacer()
+
+                        if let selectedCoverData,
+                           let image = UIImage(
+                            data: selectedCoverData) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .clipShape(.rect(cornerRadius: 10))
+                                .frame(width: 100, height: 100)
+
+                        } else {
+                            Image(systemName: "photo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                        }
+                    }
+
+                    GenreSelectionView(selectedGenres: $selectedGenres)
+                        .frame(height: 300)
+                }
+                .textFieldStyle(.roundedBorder)
+
+                Button("Save") {
+                    guard let publishedYear = publishedYear else { return }
+                    book.title = title
+                    book.author = author
+                    book.publishedYear = publishedYear
+
+                    if let selectedCoverData {
+                        book.cover = selectedCoverData
+                    }
+
+                    book.genres = []
+                    book.genres = Array(selectedGenres)
+                    selectedGenres.forEach { genre in
+                        if !genre.books.contains(where: { b in
+                            b.title == book.title
+                        }) {
+                            genre.books.append(book)
+                        }
+                    }
+
+                    do {
+                        try context.save()
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+
+                    dismiss()
+                }
+            } else {
+                Text(book.title)
+                Text(book.author)
+                Text(book.publishedYear.description)
+
+                if !book.genres.isEmpty {
+                    HStack {
+                        ForEach(book.genres) { genre in
+                            Text(genre.name)
+                                .font(.caption)
+                                .padding(.horizontal)
+                                .background(.green.opacity(0.3), in: Capsule())
+                        }
+                    }
+                }
+            }
+            Section("Notes") {
+                Button("Add new note") {
+                    showAddNewNote.toggle()
+                }
+                .sheet(isPresented: $showAddNewNote, content: {
+                    NavigationStack {
+                        AddNewNote(book: book)
+                    }
+                    .presentationDetents([.fraction(0.3)])
+                    .interactiveDismissDisabled()
+                })
+                if book.notes.isEmpty {
+                    ContentUnavailableView("No notes", systemImage: "note")
+                } else {
+                    NotesListView(book: book)
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(isEditing ? "Done" : "Edit") {
+                    isEditing.toggle()
+                }
+            }
+        }
+        .task(id: selectedCover) {
+            if let data = try? await selectedCover?.loadTransferable(type: Data.self) {
+                selectedCoverData = data
+            }
+        }
+        .navigationTitle("Book Detail")
+    }
+}
+```
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.43.04](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_13.43.04-2989870.gif)
+
+Powyższa zmiana kodu działa również w przypadku aktualizacji okładki książki. Wybierz więc nowy obraz istniejącej książki z okładką, aby zobaczyć, jak się zmienia.
+
+Zaktualizujmy proces edycji, aby uwzględnić okładkę książki, jeśli już istnieje, a jeśli nie, pokażemy obraz zastępczy.
+
+```swift
+HStack {
+  PhotosPicker(
+    selection: $selectedCover,
+    matching: .images,
+    photoLibrary: .shared()
+  ) {
+    Label("Add Cover", systemImage: "book.closed")
+  }
+  .padding(.vertical)
+
+  Spacer()
+
+  if let selectedCoverData,
+  let image = UIImage(
+    data: selectedCoverData) {
+    Image(uiImage: image)
+    .resizable()
+    .scaledToFit()
+    .clipShape(.rect(cornerRadius: 10))
+    .frame(width: 100, height: 100)
+
+  } else if let cover = book.cover, let image = UIImage(data: cover) {
+    Image(uiImage: image)
+    .resizable()
+    .scaledToFit()
+    .clipShape(.rect(cornerRadius: 5))
+    .frame(height: 100)
+  } else {
+    Image(systemName: "photo")
+    .resizable()
+    .scaledToFit()
+    .frame(width: 100, height: 100)
+  }
+}
+```
+
+Zróbmy ostatnią aktualizację. Nasz PhotoPicker nadal używa etykiety "Dodaj okładkę", nawet jeśli mamy okładkę powiązaną z książką, więc dodajmy logikę, aby odpowiednio zaktualizować etykietę.
+
+```swift
+PhotosPicker(
+    selection: $selectedCover,
+    matching: .images,
+    photoLibrary: .shared()
+) {
+    Label(book.cover == nil ? "Add Cover" : "Update Cover", systemImage: "book.closed")
+}
+.padding(.vertical)
+```
+
+## Przechowywanie danych w bazie
+
+SwiftData domyślnie używa SQLite do przechowywania swoich danych z domyślną nazwą pliku jako "default.store". Możemy zapytać o lokalizację magazynu danych, odpytując applicationSupportDirectory.
+
+Wydrukujmy lokalizację magazynu danych w contentView.
+
+
+
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        TabView {
+           ...
+        }
+        .onAppear {
+            guard let urlApp = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).last else { return }
+
+            let url = urlApp.appendingPathComponent("default.store")
+            if FileManager.default.fileExists(atPath: url.path) {
+                print("DataStore is located at \(url.absoluteString)")
+            }
+        }
+    }
+}
+```
+
+Uruchomienie aplikacji teraz spowoduje wydrukowanie lokalizacji w konsoli.
+
+np DataStore is located at file:.../Library/Developer/CoreSimulator/Devices/<<path>>/default.store
+
+Możemy używać aplikacji takich jak SQLiteBrowser (https://sqlitebrowser.org/), aby sprawdzić schemat i dane w pliku default.store.
