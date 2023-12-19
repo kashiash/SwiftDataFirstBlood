@@ -2621,3 +2621,501 @@ struct BookListView: View {
 ```
 
 ![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_15.15.00](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_15.15.00-2995336-2995337-2995339.gif)
+
+
+
+### Makro Query - Kruczki i Sztuczki. 
+
+Makro `Query` zajmuje kluczową pozycję w ekosystemie `SwiftData`, służąc przede wszystkim jako kamień węgielny do wyszukiwania i przetwarzania danych. Chociaż używaliśmy tego makra do uzyskiwania dostępu do książek z bazy, nasze użycie ograniczało się dotychczas do podstawowych scenariuszy. Przyjrzyjmy się bliżej możliwościom makra Query.
+Będziemy używać `GenreListView` do eksplorowania makra zapytania. Zwróć uwagę, że makro Query, którego używamy dla gatunku, pobiera dane posortowane według nazwy.
+
+```swift
+@Query(sort: \Genre.name) private var genres: [Genre]
+```
+
+Jednak makro zapytania nie potrzebuje tego parametru i może działać również bez niego.
+
+```swift
+@Query private var genres: [Genre]
+```
+
+Użyjmy pierwszego przeciążenia, które jako parametr przyjmuje `FetchDescriptor`. `FetchDescriptor` to typ opisujący kryteria, kolejność sortowania i dowolną dodatkową konfigurację do użycia podczas wykonywania pobierania.
+`FetchDescriptor` przyjmuje predykat jako parametr, który jest warunkiem logicznym używanym do testowania zestawu wartości wejściowych na potrzeby wyszukiwania lub filtrowania.
+W naszym przypadku przefiltrujemy gatunek według fikcji słów kluczowych.
+
+```swift
+ @Query(
+        FetchDescriptor<Genre>(predicate: #Predicate {
+            $0.name.localizedStandardContains(
+                "fiction"
+            )
+        }))
+    private var genres: [Genre]
+```
+
+To filtrowanie odbywa się na poziomie bazy danych, podobnie do uruchamiania zapytania SQL Where zawiera.
+
+```swift
+SELECT * FROM TableName WHERE Column1 CONTAINS 'keyword'
+```
+
+Inne przeciążenie Query przyjmuje parametry FetchDescriptor i Animation.
+
+```swift
+@Query(
+        FetchDescriptor<Genre>(predicate: #Predicate {
+            $0.name.localizedStandardContains(
+                "fiction"
+            )
+        }),
+        animation: .bouncy)
+```
+
+Oprócz FetchDescriptor, Query może przyjmować również parametry filtrowania, sortowania, porządkowania i animacji. Wypróbujmy je dalej.
+Zaczniemy od parametru filter, który odfiltruje wyniki za pomocą predykatu.
+
+```swift
+@Query(filter: #Predicate<Genre> { $0.name.localizedStandardContains("sci") })
+    private var genres: [Genre]
+```
+
+Wyniki możemy posortować na poziomie zapytania do bazy danych przekazując parametr sort, możemy także ustawić kolejność sortowania do przodu/do tyłu za pomocą parametru Order.
+
+```swift
+@Query(sort: \Genre.name, order: .reverse)
+    private var genres: [Genre]
+```
+
+W jednym zapytaniu możemy połączyć filtrowanie z sortowaniem. Wyniki przefiltrujemy według słowa kluczowego „fic” i posortujemy gatunek według nazwy w odwrotnej kolejności.
+
+```swift
+@Query(filter: #Predicate<Genre> {
+        $0.name.localizedStandardContains("fic")},
+           sort: \Genre.name,
+           order: .reverse)
+    private var genres: [Genre]
+```
+
+### Sortowanie w `GenreListView `
+
+Teraz, gdy wiemy już nieco więcej o makrze Query, użyjmy go do zbudowania funkcjonalności dynamicznego sortowania.
+Do tej pory widzieliśmy przykłady filtrowania i sortowania przy użyciu danych statycznych, ale możemy to wszystko zrobić również dynamicznie. Musimy tylko trochę zrefaktoryzować nasz kod.
+Biorąc pod uwagę, że `FetchDescriptor` może akceptować `SortDescriptor` jako parametr, możemy wykorzystać tę wiedzę do stworzenia dynamicznego mechanizmu sortowania. Na początek wprowadzimy nowe wyliczenie, `GenreSortOrder`, jako nasz pierwszy krok.
+
+```swift
+enum GenreSortOrder: String, Identifiable, CaseIterable {
+    case forward
+    case reverse
+    
+    var id: Self { return self }
+    
+    var title: String {
+        switch self {
+        case .forward:
+            return "Forward"
+        case .reverse:
+            return "Reverse"
+        }
+    }
+    
+    var sortOption: SortDescriptor<Genre> {
+        switch self {
+        case .forward:
+            SortDescriptor(\Genre.name, order: .forward)
+        case .reverse:
+            SortDescriptor(\Genre.name, order: .reverse)
+        }
+    }
+}
+```
+
+Następnie dokonamy refaktoryzacji `GenreListView`, tworząc widok podrzędny dla kodu odpowiedzialnego za pobieranie gatunków ze magazynu danych. Ten widok podrzędny przyjmie `sortOrder` jako parametr inicjujący i utworzymy nasze dynamiczne zapytanie na podstawie wybranego porządku sortowania.
+
+```swift
+struct GenreListSubview: View {
+    @Query private var genres: [Genre]
+    @Environment(\.modelContext) private var context
+    
+    init(sortOrder: GenreSortOrder = .forward) {
+        _genres = Query(FetchDescriptor<Genre>(sortBy: [sortOrder.sortOption]), animation: .snappy)
+    }
+    
+    var body: some View {
+        List {
+            ForEach(genres) { genre in
+                NavigationLink(value: genre) {
+                    Text(genre.name)
+                }
+                .navigationDestination(for: Genre.self) { genre in
+                    GenreDetailView(genre: genre)
+                }
+            }
+            .onDelete(perform: deleteGenre(indexSet:))
+            
+        }
+    }
+    
+    private func deleteGenre(indexSet: IndexSet) {
+        indexSet.forEach { index in
+            let genreToDelete = genres[index]
+            context.delete(genreToDelete)
+            do {
+                try context.save()
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+}
+```
+
+W głównym `GenreListView` nie potrzebujemy odniesienia do kontekstu modelu ani zapytania, więc po prostu je usuniemy i dodamy nową właściwość `State` dla opcji `sortOption`.
+
+```swift
+struct GenreListView: View {
+    @State private var presentAddNew = false
+    @State private var sortOption: GenreSortOrder = .forward
+    var body: some View {
+...
+```
+
+Dodajmy tam wywołanie podwidoku: `GenreListSubview` w miejsce obecnej struktury `List {…}`
+
+```swift
+struct GenreListView: View {
+    @State private var presentAddNew = false
+    @State private var sortOption: GenreSortOrder = .forward
+    var body: some View {
+        NavigationStack {
+            GenreListSubview(sortOrder: sortOption)
+            .navigationTitle("Literary Genres")
+...
+```
+
+Na koniec dodamy przycisk na pasku narzędzi, który umożliwi sortowanie listy gatunków w kolejności do przodu i do tyłu.
+
+```swift
+struct GenreListView: View {
+    ...
+    var body: some View {
+        NavigationStack {
+            ...
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ...
+                }
+                
+                ToolbarItem(placement: .topBarLeading) {
+                    Button{
+                        sortOption = sortOption == .forward ? .reverse : .forward
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        }
+    }
+    
+}
+```
+
+i usuńmy domagająca sie kontekstu, niepotrzebna w tym miejscu funcje do usuwania danych `deleteGenre`
+
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_19.05.35](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_19.05.35-3009167.gif)
+
+### Wyszukiwanie na liscie książek - wersja rozbudowana
+
+Makro `Query` upraszcza proces filtrowania i sortowania danych w ramach `SwiftData`, działając bezpośrednio na poziomie bazy danych. We wcześniejszych etapach projektu zaimplementowaliśmy funkcję wyszukiwania dla widoku listy książek, ale opierała się ona na wyszukiwaniu w pamięci. Chociaż to podejście jest skuteczne w przypadku mniejszych zbiorów danych, staje się mniej opłacalne w miarę zwiększania się rozmiaru zbioru danych.
+Przeprowadzimy refaktoryzację kodu, aby zbudować efektywne przeszukiwanie widoku listy książek za pomocą makra Query.
+
+W pierwszej kolejności listę książek `BookListView` musimy przekształcić jak w poprzednim rozdziale na Widok bazowy i podwidok z danymi `BookListSubview`. W `BookListView` pozwalamy na ustalenie kryteriow wyświetlania i te kryteria jako parametry przekazujemy do widoku wyświetlającego `BookListSubview`. 
+
+Wydzielony szkielet podwidoku: 
+
+```swift
+import SwiftUI
+
+struct BookListSubview: View {
+    var body: some View {
+        List {
+            ForEach(books) { book in
+                NavigationLink(value: book) {
+                    BookCellView(book: book)
+                }
+               
+            }
+            .onDelete(perform: delete(indexSet:))
+        }
+    }
+    
+    private func delete(indexSet: IndexSet) {
+        indexSet.forEach { index in
+            let book = books[index]
+            context.delete(book)
+            
+            do {
+                try context.save()
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+}
+```
+
+Aby uzyskać odniesienia do książek, zrezygnujemy z pobierania ich z BookListView i zamiast tego prześlemy zapytanie do bazy danych w celu pobrania. Pobierając książki bezpośrednio z bazy danych, będziemy mieli możliwość przekazania prawidłowego ciągu filtrującego, aby uzyskać najbardziej odpowiedni zestaw książek na podstawie wyszukiwanego hasła. Dodatkowo będziemy potrzebować dostępu do kontekstu w  widoku podrzędnym, aby umożliwić bezpośrednie usunięcie rekordu.
+
+```swift
+struct BookListSubview: View {
+    @Environment(\.modelContext) private var context
+    @Query private var books: [Book]
+```
+
+Musimy odebrać wyszukiwane hasło jako parametr, abyśmy mogli przekazać je do zapytania.
+
+```swift
+struct BookListSubview: View {
+    @Environment(\.modelContext) private var context
+    @Query private var books: [Book]
+    var searchTerm: String
+```
+
+Następnie dodamy inicjator akceptowający parametr `searchTerm` i utworzymy zapytanie na podstawie wartości `searchTerm`. Gdy `searchTerm` będzie pusty, utworzymy puste zapytanie, co zasadniczo zwróci wszystkie książki z bazy danych. Jeśli zdefiniowany jest termin wyszukiwania, przekażemy go jako predykat za pomocą parametru filter makra `Query`.
+
+```swift
+struct BookListSubview: View {
+    ...
+    
+    init(searchTerm: String = "") {
+        self.searchTerm = searchTerm
+        if searchTerm.isEmpty {
+            _books = Query()
+        } else {
+            _books = Query(filter: #Predicate { $0.title.localizedStandardContains(searchTerm)})
+        }
+    }
+```
+
+W głównym widoku BookListView zastąpimy widok listy widokiem BookListSubview. I Usuwamy funkcje delete:
+
+```swift
+struct BookListView: View {
+    ...
+    @State private var searchTerm: String = ""
+    
+    var body: some View {
+        NavigationStack {
+          
+            BookListSubview(searchTerm: searchTerm)
+            .searchable(text: $searchTerm, prompt: "Search book title")
+            .navigationDestination(for: Book.self) { book in
+                BookDetailView(book: book)
+            }
+          
+          ...
+```
+
+
+
+Sprawdźmy, czy wyszukiwanie odbywa się na poziomie bazy danych, czy nie. Wykorzystamy dane wyjściowe debugowania SQL z ustawień schematu Xcode.
+Zacznij więc od edycji bieżącego schematu
+
+
+
+![image-20231219203450998](image-20231219203450998-3014497.png)
+
+W obszarze Schemat uruchamiania dodaj nową wartość dla „Argumenty przekazywane przy uruchomieniu” o nazwie
+
+```swift
+-com.apple.CoreData.SQLDebug 4
+```
+
+![image-20231219203657855](image-20231219203657855-3014620.png)
+
+Możemy ustawić tę flagę od 1 do 4, gdzie 1 oznacza mniej szczegółów, a 4 oznacza szczegóły debugowania instrukcji SQL. Ustawiamy wartość na 4. Po ustawieniu zamknijmy okno i uruchommy projekt. Szukaną wartość powinieneś znaleźć w instrukcji SQL w logu konsoli.
+
+przed zmiana :
+
+```swift
+CoreData: sql: SELECT 0, t0.Z_PK, t0.Z_OPT, t0.ZAUTHOR, t0.ZCOVER, t0.ZPUBLISHEDYEAR, t0.ZTITLE FROM ZBOOK t0 ORDER BY t0.Z_PK
+```
+
+po zmianie 
+
+```swift
+CoreData: sql: SELECT 0, t0.Z_PK, t0.Z_OPT, t0.ZAUTHOR, t0.ZCOVER, t0.ZPUBLISHEDYEAR, t0.ZTITLE FROM ZBOOK t0 WHERE  NSCoreDataStringSearch( t0.ZTITLE, ?, 417, 1) ORDER BY t0.Z_PK
+CoreData: details: SQLite bind[0] = "Maui"
+```
+
+
+
+### Sortowanie `BookListView`
+
+
+
+Wykorzystujemy możliwości filtrowania opartego na predykatach, aby usprawnić wyszukiwanie w aplikacji. Sensowne byłoby zaoferowanie również opcji sortowania. Widzieliśmy już sortowanie oparte na zapytaniach dla gatunku książki.
+
+Oferowanie opcji sortowania w aplikacjach zapewnia liczne korzyści. Poprawia doświadczenie użytkownika, umożliwiając organizację treści w oparciu o preferencje użytkownika, zwiększając wydajność, dostosowywanie i zaangażowanie użytkowników. Opcje sortowania ułatwiają odnajdywanie treści, dają użytkownikom kontrolę nad ich interakcją z aplikacją i zapewniają elastyczność w zakresie różnych kryteriów wyświetlania. Ponadto ta funkcja ułatwia organizację danych w aplikacjach zwiększających produktywność i może służyć jako przewaga konkurencyjna, zwiększając zadowolenie użytkowników i utrzymanie aplikacji.
+
+
+
+Dodajmy możliwość sortowania do strony z listą książek, pozwalając użytkownikowi wybrać opcję sortowania. Pozwolimy na sortowanie treści według tytułu, autora i roku publikacji.
+Rozpocznij od dodania nowego pliku o nazwie `SortingOption`. Będzie to wyliczenie typu String zgodne z protokołem Identible (aby zidentyfikować każdy przypadek za pomocą identyfikatora), `CaseIterable` (aby móc iterować po wszystkich przypadkach wyliczeniowych).
+
+```swift
+import Foundation
+
+enum SortingOption: String, Identifiable, CaseIterable {
+```
+
+Będziemy przestrzegać identyfikowalnego protokołu, podając definicję właściwości id.
+
+```swift
+import Foundation
+
+enum SortingOption: String, Identifiable, CaseIterable {
+    
+    var id: Self { return self }
+```
+
+Następnie utworzymy przypadki dla wyliczenia, które będzie zawierać tytuł, autora, rok publikacji i brak jako wartości wyliczenia.
+
+```swift
+enum SortingOption: String, Identifiable, CaseIterable {
+    
+    var id: Self { return self }
+    
+    case title
+    case author
+    case publishedYear
+    case none
+```
+
+Potrzebujemy reprezentacji ciągu dla każdego przypadku, abyśmy mogli użyć tej wartości dla etykiety podczas prezentowania opcji sortowania.
+
+```swift
+import Foundation
+
+enum SortingOption: String, Identifiable, CaseIterable {
+    
+    var id: Self { return self }
+    
+    case title
+    case author
+    case publishedYear
+    case none
+    
+    var title: String {
+        switch self {
+        case .title:
+            return "Title"
+        case .author:
+            return "Author"
+        case .publishedYear:
+            return "Published Year"
+        case .none:
+            return "None"
+        }
+    }
+```
+
+Następnie utworzymy opcje sortowania. Ta obliczona właściwość zwróci SortDescriptor dla każdego przypadku, którego użyjemy do przekazania do makra Query.
+
+```swift
+enum SortingOption: String, Identifiable, CaseIterable {
+    
+ ...
+    
+    var sortOption: SortDescriptor<Book> {
+        switch self {
+        case .title:
+            SortDescriptor(\Book.title, order: .forward)
+        case .author:
+            SortDescriptor(\Book.author, order: .forward)
+        case .publishedYear:
+            SortDescriptor(\Book.publishedYear, order: .forward)
+        case .none:
+            SortDescriptor(\Book.title)
+        }
+    }
+}
+```
+
+Zaktualizujmy BookListSubview, aby uwzględnić nowy parametr opcji sortowania podczas inicjowania widoku.
+Użyjemy tego nowo przekazanego parametru sortowania, aby zaktualizować nasze zapytanie i uwzględnić opcję sortOption dla wybranej wartości.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListSubview: View {
+    ...
+    
+    init(searchTerm: String = "", bookSortOption: SortingOption = .none) {
+        self.searchTerm = searchTerm
+        if searchTerm.isEmpty {
+            _books = Query(sort: [bookSortOption.sortOption])
+        } else {
+            _books = Query(filter: #Predicate { $0.title.localizedStandardContains(searchTerm)}, sort: [bookSortOption.sortOption])
+        }
+    }
+...
+```
+
+Następnie zaktualizujemy BookListView, aby obsługiwał opcje sortowania.
+Zacznijmy od dołączenia nowej właściwości State, aby przechwycić wybór sortowania.
+
+```swift
+struct BookListView: View {
+    ...
+    
+    @State private var bookSortOption = SortingOption.none
+```
+
+Przekażemy tę wartość do BookListSubview.
+
+```swift
+struct BookListView: View {
+    ...
+    @State private var bookSortOption = SortingOption.none
+    
+    var body: some View {
+        NavigationStack {
+            BookListSubview(searchTerm: searchTerm, bookSortOption: bookSortOption)
+```
+
+Następnie dodamy nowy element paska narzędzi na górnym pasku końcowym, który będzie zawierał kontrolkę Menu. Ta kontrolka będzie iterować po SortingOptions, aby utworzyć menu sortowania.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct BookListView: View {
+   ...
+    @State private var bookSortOption = SortingOption.none
+    
+    var body: some View {
+        NavigationStack {
+            BookListSubview(searchTerm: searchTerm, bookSortOption: bookSortOption)
+            
+...
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        ForEach(SortingOption.allCases) { sortOption in
+                            Button(sortOption.title) {
+                                bookSortOption = sortOption
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+
+                }
+            }
+        }
+    }
+}
+```
+
