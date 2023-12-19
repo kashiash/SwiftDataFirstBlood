@@ -9,9 +9,9 @@ import SwiftUI
 
 struct BookCellView: View {
     let book: Book
-    
+
     var body: some View {
-        NavigationLink(value: book) {
+
             HStack (alignment: .top) {
                 if let cover = book.cover, let image = UIImage(data: cover) {
                     Image(uiImage: image)
@@ -31,7 +31,7 @@ struct BookCellView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.top, 20)
-                    
+
                     if !book.genres.isEmpty {
                         HStack {
                             ForEach(book.genres) { genre in
@@ -45,10 +45,7 @@ struct BookCellView: View {
                 }
             }
         }
-        .navigationDestination(for: Book.self) { book in
-            BookDetailView(book: book)
-        }
-    }
+   
 }
 
 //#Preview {

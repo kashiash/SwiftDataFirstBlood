@@ -2956,9 +2956,7 @@ CoreData: details: SQLite bind[0] = "Maui"
 
 Wykorzystujemy możliwości filtrowania opartego na predykatach, aby usprawnić wyszukiwanie w aplikacji. Sensowne byłoby zaoferowanie również opcji sortowania. Widzieliśmy już sortowanie oparte na zapytaniach dla gatunku książki.
 
-Oferowanie opcji sortowania w aplikacjach zapewnia liczne korzyści. Poprawia doświadczenie użytkownika, umożliwiając organizację treści w oparciu o preferencje użytkownika, zwiększając wydajność, dostosowywanie i zaangażowanie użytkowników. Opcje sortowania ułatwiają odnajdywanie treści, dają użytkownikom kontrolę nad ich interakcją z aplikacją i zapewniają elastyczność w zakresie różnych kryteriów wyświetlania. Ponadto ta funkcja ułatwia organizację danych w aplikacjach zwiększających produktywność i może służyć jako przewaga konkurencyjna, zwiększając zadowolenie użytkowników i utrzymanie aplikacji.
-
-
+Oferowanie opcji sortowania w aplikacjach zapewnia liczne korzyści. Poprawia tz UX - doświadczenie użytkownika, umożliwiając organizację treści w oparciu o preferencje użytkownika, zwiększając wydajność, dostosowywanie i zaangażowanie użytkowników. Opcje sortowania ułatwiają odnajdywanie treści, dają użytkownikom kontrolę nad ich interakcją z aplikacją i zapewniają elastyczność w zakresie różnych kryteriów wyświetlania. Ponadto ta funkcja ułatwia organizację danych w aplikacjach zwiększających produktywność i może służyć jako przewaga konkurencyjna, zwiększając zadowolenie użytkowników i utrzymanie aplikacji.
 
 Dodajmy możliwość sortowania do strony z listą książek, pozwalając użytkownikowi wybrać opcję sortowania. Pozwolimy na sortowanie treści według tytułu, autora i roku publikacji.
 Rozpocznij od dodania nowego pliku o nazwie `SortingOption`. Będzie to wyliczenie typu String zgodne z protokołem Identible (aby zidentyfikować każdy przypadek za pomocą identyfikatora), `CaseIterable` (aby móc iterować po wszystkich przypadkach wyliczeniowych).
@@ -3020,7 +3018,7 @@ enum SortingOption: String, Identifiable, CaseIterable {
     }
 ```
 
-Następnie utworzymy opcje sortowania. Ta obliczona właściwość zwróci SortDescriptor dla każdego przypadku, którego użyjemy do przekazania do makra Query.
+Następnie utworzymy opcje sortowania. Ta obliczona właściwość zwróci `SortDescriptor` dla każdego przypadku, którego użyjemy do przekazania do makra `Query`.
 
 ```swift
 enum SortingOption: String, Identifiable, CaseIterable {
@@ -3042,8 +3040,8 @@ enum SortingOption: String, Identifiable, CaseIterable {
 }
 ```
 
-Zaktualizujmy BookListSubview, aby uwzględnić nowy parametr opcji sortowania podczas inicjowania widoku.
-Użyjemy tego nowo przekazanego parametru sortowania, aby zaktualizować nasze zapytanie i uwzględnić opcję sortOption dla wybranej wartości.
+Zaktualizujmy `BookListSubview`, aby uwzględnić nowy parametr opcji sortowania podczas inicjowania widoku.
+Użyjemy tego nowo przekazanego parametru sortowania, aby zaktualizować nasze zapytanie i uwzględnić opcję `sortOption` dla wybranej wartości.
 
 ```swift
 import SwiftUI
@@ -3063,8 +3061,8 @@ struct BookListSubview: View {
 ...
 ```
 
-Następnie zaktualizujemy BookListView, aby obsługiwał opcje sortowania.
-Zacznijmy od dołączenia nowej właściwości State, aby przechwycić wybór sortowania.
+Następnie zaktualizujemy `BookListView`, aby obsługiwał opcje sortowania.
+Zacznijmy od dołączenia nowej właściwości `State`, aby przechwycić wybór sortowania.
 
 ```swift
 struct BookListView: View {
@@ -3073,7 +3071,7 @@ struct BookListView: View {
     @State private var bookSortOption = SortingOption.none
 ```
 
-Przekażemy tę wartość do BookListSubview.
+Przekażemy tę wartość do `BookListSubview`.
 
 ```swift
 struct BookListView: View {
@@ -3085,7 +3083,7 @@ struct BookListView: View {
             BookListSubview(searchTerm: searchTerm, bookSortOption: bookSortOption)
 ```
 
-Następnie dodamy nowy element paska narzędzi na górnym pasku końcowym, który będzie zawierał kontrolkę Menu. Ta kontrolka będzie iterować po SortingOptions, aby utworzyć menu sortowania.
+Następnie dodamy nowy element paska narzędzi na górnym pasku końcowym, który będzie zawierał kontrolkę Menu. Ta kontrolka będzie iterować po `SortingOptions`, aby utworzyć menu sortowania.
 
 ```swift
 import SwiftUI
@@ -3098,9 +3096,7 @@ struct BookListView: View {
     var body: some View {
         NavigationStack {
             BookListSubview(searchTerm: searchTerm, bookSortOption: bookSortOption)
-            
 ...
-                
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         ForEach(SortingOption.allCases) { sortOption in
@@ -3116,6 +3112,53 @@ struct BookListView: View {
             }
         }
     }
+}
+```
+
+w BookCellView usuwamy NavigationLink oraz NavigationDestination
+
+w efekcie końcowym powinna wyglądac mniej wiecej tak:
+
+```swift
+struct BookCellView: View {
+    let book: Book
+
+    var body: some View {
+
+            HStack (alignment: .top) {
+                if let cover = book.cover, let image = UIImage(data: cover) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(.rect(cornerRadius: 5))
+                        .frame(height: 100)
+                }
+                VStack(alignment: .leading) {
+                    Text(book.title)
+                        .bold()
+                    HStack {
+                        Text("Author: \(book.author)")
+                        Spacer()
+                        Text("Published on: \(book.publishedYear.description)")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 20)
+
+                    if !book.genres.isEmpty {
+                        HStack {
+                            ForEach(book.genres) { genre in
+                                Text(genre.name)
+                                    .font(.caption)
+                                    .padding(.horizontal)
+                                    .background(.green.opacity(0.3), in: Capsule())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+   
 }
 ```
 
