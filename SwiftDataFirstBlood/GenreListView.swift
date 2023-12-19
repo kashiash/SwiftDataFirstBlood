@@ -17,7 +17,12 @@ struct GenreListView: View {
         NavigationStack {
             List {
                 ForEach(genres) { genre in
-                    Text(genre.name)
+                    NavigationLink(value: genre) {
+                        Text(genre.name)
+                    }
+                    .navigationDestination(for: Genre.self) { genre in
+                        GenreDetailView(genre: genre)
+                    }
                 }
                 .onDelete(perform: deleteGenre(indexSet:))
             }

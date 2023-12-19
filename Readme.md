@@ -1837,7 +1837,7 @@ struct GenreListView: View {
 Następnie zaktualizujemy `GenreDetailView`, aby wyrenderować listę książek należących do wybranego gatunku. Do wyświetlenia stanu pustego użyjemy `ContentUnavailableView`. Użyjemy widoku listy do renderowania książek w ramach wybranego gatunku i wyświetlimy nazwę wybranego gatunku jako tytuł tego widoku.
 
 ```swift
-import SwiftUI
+/Users/uta/Library/Containers/com.swiftLee.RocketSim/Data/tmp/RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.45.58.gifimport SwiftUI
 import SwiftData
 
 struct GenreDetailView: View {
@@ -1861,3 +1861,4 @@ struct GenreDetailView: View {
 }
 ```
 
+![RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.45.58](RocketSim_Recording_iPhone_15_Pro_Max_6.7_2023-12-19_10.45.58-2979233.gif)
