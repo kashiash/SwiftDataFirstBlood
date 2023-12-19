@@ -3347,3 +3347,17 @@ struct GenreListSubview: View {
     }
 ```
 
+
+
+Tematy do poruszenia w kolejnych dniach :
+
+
+
+## Migracja bazy danych po zmianach struktury
+
+## Integracja z CloudKit
+
+## Lokalizacja wersji - nasza aplikacja po Polsku i … np San Eskobarsku lub Suahili
+
+## Wymiana danych z WebApi + JWT
+
