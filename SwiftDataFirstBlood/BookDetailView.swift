@@ -12,32 +12,32 @@ import PhotosUI
 
 struct BookDetailView: View {
     let book: Book
-
+    
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-
+    
     @State private var isEditing = false
-
+    
     @State private var title: String = ""
     @State private var author: String = ""
     @State private var publishedYear: Int? = nil
-
+    
     @State private var showAddNewNote = false
-
+    
     @State private var selectedGenres = Set<Genre>()
-
+    
     @State private var selectedCover: PhotosPickerItem?
     @State private var selectedCoverData: Data?
-
+    
     init(book: Book) {
         self.book = book
         self._title = State(initialValue: book.title)
         self._author = State(initialValue: book.author)
         self._publishedYear = State(initialValue: book.publishedYear)
-
+        
         self._selectedGenres = State.init(initialValue: Set(book.genres))
     }
-
+    
     var body: some View {
         Form {
             if isEditing {
@@ -46,7 +46,7 @@ struct BookDetailView: View {
                     TextField("Book author", text: $author)
                     TextField("Published year", value: $publishedYear, formatter: NumberFormatter())
                         .keyboardType(.numberPad)
-
+                    
                     HStack {
                         PhotosPicker(
                             selection: $selectedCover,
@@ -56,18 +56,18 @@ struct BookDetailView: View {
                             Label(book.cover == nil ? "Add Cover" : "Update Cover", systemImage: "book.closed")
                         }
                         .padding(.vertical)
-
+                        
                         Spacer()
-
+                        
                         if let selectedCoverData,
-                            let image = UIImage(
+                           let image = UIImage(
                             data: selectedCoverData) {
                             Image(uiImage: image)
                                 .resizable()
                                 .scaledToFit()
                                 .clipShape(.rect(cornerRadius: 10))
                                 .frame(width: 100, height: 100)
-
+                            
                         } else if let cover = book.cover, let image = UIImage(data: cover) {
                             Image(uiImage: image)
                                 .resizable()
@@ -81,22 +81,22 @@ struct BookDetailView: View {
                                 .frame(width: 100, height: 100)
                         }
                     }
-
+                    
                     GenreSelectionView(selectedGenres: $selectedGenres)
                         .frame(height: 300)
                 }
                 .textFieldStyle(.roundedBorder)
-
+                
                 Button("Save") {
                     guard let publishedYear = publishedYear else { return }
                     book.title = title
                     book.author = author
                     book.publishedYear = publishedYear
-
+                    
                     if let selectedCoverData {
                         book.cover = selectedCoverData
                     }
-
+                    
                     book.genres = []
                     book.genres = Array(selectedGenres)
                     selectedGenres.forEach { genre in
@@ -106,20 +106,20 @@ struct BookDetailView: View {
                             genre.books.append(book)
                         }
                     }
-
+                    
                     do {
                         try context.save()
                     } catch {
                         print(error.localizedDescription)
                     }
-
+                    
                     dismiss()
                 }
             } else {
                 Text(book.title)
                 Text(book.author)
                 Text(book.publishedYear.description)
-
+                
                 if !book.genres.isEmpty {
                     HStack {
                         ForEach(book.genres) { genre in
@@ -165,16 +165,14 @@ struct BookDetailView: View {
     }
 }
 
-//#Preview {
-//    do {
-//        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-//        let container = try ModelContainer(for: Book.self, configurations: config)
-//        let example = Book.generateRandomBook()
-//
-//        return BookDetailView(book: example)
-//            .modelContainer(container)
-//    } catch {
-//        fatalError("Coś się zjebsuło")
-//    }
-//
-//}
+
+
+#Preview {
+    do {
+        let previewer = try Previewer()
+        return BookDetailView(book: previewer.book)
+            .modelContainer(for: Book.self)
+    } catch {
+        return Text("Failed to create preview: \(error.localizedDescription)")
+    }
+}

@@ -59,7 +59,7 @@ struct BookListView: View {
     }
 }
 
-//#Preview {
-//    BookListView()
-//        .modelContainer(for: [Book.self])
-//}
+#Preview {
+    BookListView()
+        .modelContainer(for: [Book.self])
+}

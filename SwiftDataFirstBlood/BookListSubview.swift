@@ -58,3 +58,9 @@ struct BookListSubview: View {
         }
     }
 }
+
+
+#Preview {
+    BookListView()
+        .modelContainer(for: [Book.self])
+}

@@ -868,6 +868,98 @@ struct BookListView: View {
 }
 ```
 
+## Uruchommy podglądy 
+
+Jest jeszcze więcej do zrobienia w tej aplikacji, ale w tym momencie chcę zatrzymać się na chwilę, aby rozwiązać nierozstrzygnięty problem: jak sprawić, by podglądy Xcode działały?
+
+Cóż, możesz pomyśleć, że możemy po prostu stworzyć przykładowy obiekt `Book` i po prostu przekazać go, wraz ze stałą ścieżką nawigacyjną. W przypadku `BookDetailView` takie rozwiązanie wyglądałoby tak:
+
+```swift
+#Preview {
+    let book = Book(title: "Poczytaj mi mamo 1", author: "Julian Tuwim", publishedYear: 1971)
+
+    return BookDetailView(book: book)
+        .modelContainer(for: Book.self)
+}
+```
+
+Jednak ten kod nie działa, ponieważ SwiftData jest podstępny: jak tylko wywołasz inicjalizator Book, po cichu szuka tego, co jest aktualnie aktywnym kontenerem modelu, aby upewnić się, że wszystko jest poprawnie skonfigurowane.
+
+W naszym kodzie podglądu tworzymy kontener modelu dopiero po utworzeniu przykładowej książki, co oznacza, że nasz podgląd nie będzie działał - w rzeczywistości po prostu się wykraczy.
+
+Naprawienie tego oznacza utworzenie kontenera modelu przed utworzeniem przykładowych danych, ale gdy tam jesteśmy, chcemy również włączyć niestandardową opcję konfiguracji, która mówi SwiftData, aby przechowywał swoje dane tylko w pamięci. Oznacza to, że wszystko, co wstawiamy do kontenera modelu, jest tylko tymczasowe, co jest idealne do celów podglądu.
+
+```swift
+#Preview {
+    do {
+        let container: ModelContainer
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        container = try ModelContainer(for: Book.self, configurations: config)
+
+        let book = Book(title: "Poczytaj mi mamo 1", author: "Julian Tuwim", publishedYear: 1971)
+        container.mainContext.insert(book)
+        return BookDetailView(book: book)
+            .modelContainer(for: Book.self)
+    } catch {
+        return Text("Failed to create preview: \(error.localizedDescription)")
+    }
+}
+```
+
+To wymaga sporo linii kodu, a ponieważ potrzebujemy go w więcej niż jednym miejscu, zamierzamy wyizolować tę funkcjonalność w nowej strukturze o nazwie `Previewer`. Będzie to miało za zadanie skonfigurowanie przykładowego kontenera i stworzenie niektórych danych z możliwością podglądu, abyśmy mogli użyć tego współdzielonego kodu wszędzie tam, gdzie chcemy, aby podgląd działał.
+
+```swift
+import Foundation
+import SwiftData
+
+
+@MainActor
+struct Previewer {
+    let container: ModelContainer
+    let book: Book
+    let genre: Genre
+    let note: Note
+
+    init() throws {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        container = try ModelContainer(for: Book.self, configurations: config)
+
+        book = Book(title: "Poczytaj mi mamo 1", author: "Julian Tuwim", publishedYear: 1971)
+        container.mainContext.insert(book)
+
+        genre = Genre(name: "horror")
+        genre.books.append(book)
+        container.mainContext.insert(genre)
+
+        note = Note(title: "Fajny tekst", message: "Pies ci morde lizał", book: book)
+        container.mainContext.insert(note)
+
+    }
+}
+```
+
+Jest tam kilka ważnych szczegółów, które chcę tam wybrać:
+
+1. Ponieważ główny kontekst SwiftData zawsze działa na głównym wątku, musimy zanotować całą strukturę za pomocą @MainActor, aby upewnić się, że również tam działa.
+2. Sprawienie, by SwiftData przechowywał swoje dane w pamięci, oznacza użycie ModelConfiguration. Ma to różne przydatne opcje, ale w tej chwili zależy nam tylko na tym, aby nie przechowywać danych na stałe.
+3. Same tworzenie kontenera modelowego jest operacją która może zgłosić wyjątek, więc oznaczyłem cały inicjalizator `throws`, zamiast próbować radzić sobie z błędami wewnątrz tej klasy.
+4. Tworzone są dwa przykładowe fragmenty danych, ale tylko jeden jest wstawiany. W porządku - znowu SwiftData wie, że związek tam jest, więc wstawi oba.
+5. Kontener danych, książka, gatunek i notatka są przechowywane we właściwościach dla łatwiejszego dostępu zewnętrznego. Uczyniłem je wszystkie stałymi, ponieważ nie ma sensu zmieniać ich po ich utworzeniu.
+
+po tych zmianach nasz prewiever dla wszystkich widokow przyjmujących book jako parametr, można uprościć o kilka linijek kodu:
+
+```swift
+#Preview {
+    do {
+        let previewer = try Previewer()
+        return BookDetailView(book: previewer.book)
+            .modelContainer(for: Book.self)
+    } catch {
+        return Text("Failed to create preview: \(error.localizedDescription)")
+    }
+}
+```
+
 
 
 ##  Model `Notes`. Relacje z innymi danymi
@@ -3346,6 +3438,8 @@ struct GenreListSubview: View {
         }
     }
 ```
+
+
 
 
 

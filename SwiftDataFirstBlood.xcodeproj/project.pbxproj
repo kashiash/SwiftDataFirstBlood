@@ -10,6 +10,7 @@
 		76206A9D2B30D8F400278E5F /* Genre.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76206A9C2B30D8F400278E5F /* Genre.swift */; };
 		76206A9F2B30DB9900278E5F /* GenreListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76206A9E2B30DB9900278E5F /* GenreListView.swift */; };
 		76206AA12B30DE9900278E5F /* AddNewGenre.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76206AA02B30DE9900278E5F /* AddNewGenre.swift */; };
+		764005752B3B9CE700A17910 /* Previewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 764005742B3B9CE700A17910 /* Previewer.swift */; };
 		76DF29182B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */; };
 		76DF291A2B2FA8B70005A7A3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76DF29192B2FA8B70005A7A3 /* ContentView.swift */; };
 		76DF291C2B2FA8B80005A7A3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 76DF291B2B2FA8B80005A7A3 /* Assets.xcassets */; };
@@ -35,6 +36,7 @@
 		76206A9C2B30D8F400278E5F /* Genre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Genre.swift; sourceTree = "<group>"; };
 		76206A9E2B30DB9900278E5F /* GenreListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreListView.swift; sourceTree = "<group>"; };
 		76206AA02B30DE9900278E5F /* AddNewGenre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewGenre.swift; sourceTree = "<group>"; };
+		764005742B3B9CE700A17910 /* Previewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Previewer.swift; sourceTree = "<group>"; };
 		76DF29142B2FA8B70005A7A3 /* SwiftDataFirstBlood.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftDataFirstBlood.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		76DF29172B2FA8B70005A7A3 /* SwiftDataFirstBloodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataFirstBloodApp.swift; sourceTree = "<group>"; };
 		76DF29192B2FA8B70005A7A3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				76F0CD552B304F2200E2C47C /* Preview.swift */,
+				764005742B3B9CE700A17910 /* Previewer.swift */,
 			);
 			path = Preview;
 			sourceTree = "<group>";
@@ -212,6 +215,7 @@
 				76EE1C252B322AF8000320CF /* BookListSubview.swift in Sources */,
 				76DF292A2B2FAA570005A7A3 /* AddNewBookView.swift in Sources */,
 				76F0CD512B30361700E2C47C /* BookCellView.swift in Sources */,
+				764005752B3B9CE700A17910 /* Previewer.swift in Sources */,
 				76206AA12B30DE9900278E5F /* AddNewGenre.swift in Sources */,
 				76F0CD5E2B3057E900E2C47C /* AddNewNote.swift in Sources */,
 				76EE1C272B323A3D000320CF /* SortingOption.swift in Sources */,
