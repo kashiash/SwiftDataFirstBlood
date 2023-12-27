@@ -3439,7 +3439,241 @@ struct GenreListSubview: View {
     }
 ```
 
+###  Modyfikacja struktury
 
+Kolor, z punktu widzenia aplikacji, ma ogromne znaczenie. Wpływa na atrakcyjność wizualną, wrażenia użytkownika i branding. W projektowaniu kolory wpływają na czytelność, hierarchię i ogólną estetyczną prezentację aplikacji. Odgrywają kluczową rolę w przekazywaniu emocji, nadaniu tonu aplikacji i wywoływaniu konkretnych reakcji użytkowników. Wykorzystanie odpowiednich schematów kolorów pomaga w tworzeniu niezapomnianej tożsamości marki, pomagając w rozpoznawaniu i postrzeganiu przez użytkowników. Co więcej, zrozumienie psychologicznych i kulturowych implikacji kolorów ma fundamentalne znaczenie dla określenia, w jaki sposób aplikacja skutecznie komunikuje się i angażuje ze swoimi użytkownikami.
+
+Przechowywanie kolorów w bazie danych stawia przed sobą różne wyzwania. Jednym z powszechnych podejść jest konwersja wartości koloru na jego reprezentację heksademnasalną i zapisanie jej w bazie danych. Jednak staramy się przyjąć inne podejście, przechowując sam typ koloru. Podstawowym celem jest zademonstrowanie możliwości zapisywania niestandardowych typów w magazynie danych SwiftData.
+
+Kontynuujmy budowanie na przykładzie naszej aplikacji `ReadingLogs`. Gatunki w aplikacji są wyświetlane w tym samym jasnozielonym kolorze.
+
+Korzystne byłoby kojarzenie kolorów z gatunkami. Następnie, wyświetlając gatunek w widoku szczegółów książki, możemy wyświetlić tło gatunku z kolorami zapisanymi dla każdego gatunku.
+
+Zaczniemy od modyfikacji modelu Genre. Aby przechowywać kolor, stworzymy niestandardową klasę, która dziedziczy po abstrakcyjnej klasie ValueTransformer. ValueTransformer jest używany do konwersji wartości z jednej reprezentacji do drugiej. Ponieważ dostosowujemy się do klasy, która wymaga zgodności NSObject, użyjemy typu UIColor zamiast typu Color.
+
+Dodaj nową właściwość o nazwie color of type UIColor w modelu Genre. Nie zapomnij zaimportować UIKit.
+
+```swift
+import Foundation
+import SwiftData
+import UIKit
+
+@Model
+final class Genre {
+    var name: String
+    var books = [Book]()
+    var color: UIColor
+    
+    init(name: String) {
+        self.name = name
+    }
+}
+```
+
+Następnie stworzymy nową klasę ze zgodnością ValueTransformer, ktorej zadaniem bedzie konwertowanie naszego koloru na wartośc akceptowana przez SwiftData:
+
+```swift
+import Foundation
+import UIKit
+
+final class ColorTransformer: ValueTransformer {
+    override func transformedValue(_ value: Any?) -> Any? {
+        
+    }
+    
+    override func reverseTransformedValue(_ value: Any?) -> Any? {
+        
+    }
+}
+```
+
+Zastąpimy dwie funkcje z tej klasy. Funkcja `transformedValue` pomoże nam przekonwertować kolor na typ danych, aby mógł być zapamiętany.
+
+Funkcja `transformedValue` zrobi dokładnie odwrotnie i przekonwertuje zapisane/pobrane dane na typ koloru.
+
+Użyjemy NSKeyedArchiver.archivedData do zakodowania danych kolorów do typu danych.
+
+```swift
+final class ColorTransformer: ValueTransformer {
+    override func transformedValue(_ value: Any?) -> Any? {
+        guard let color = value as? UIColor else { return nil }
+        do {
+            let data = try NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
+            
+            return data
+            
+        } catch {
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+```
+
+Aby przekonwertować zapisane dane z powrotem na typ koloru, użyjemy `NSKeyedUnarchiver.unarchivedObject` do dekodowania danych z powrotem do obiektu kolorowego.
+
+```swift
+final class ColorTransformer: ValueTransformer {
+    override func transformedValue(_ value: Any?) -> Any? {
+        guard let color = value as? UIColor else { return nil }
+        do {
+            let data = try NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
+            
+            return data
+            
+        } catch {
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+    
+    override func reverseTransformedValue(_ value: Any?) -> Any? {
+        guard let colorData = value as? Data else { return nil }
+        do {
+            let color = try NSKeyedUnarchiver.unarchivedObject(ofClass: UIColor.self, from: colorData)
+            
+            return color
+            
+        } catch {
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+}
+```
+
+Zanim wdrożymy ten transformator, ważne jest, aby upewnić się, że jest on prawidłowo zarejestrowany w naszej aplikacji i że nasza aplikacja rozumie funkcję tego transformatora.
+
+Otwórz plik aplikacji i zarejestruj transformator.
+
+```swift
+struct SwiftDataFirstBloodApp: App {
+
+    init() {
+        ValueTransformer.setValueTransformer(ColorTransformer(),
+                        forName: NSValueTransformerName("ColorTransformer"))
+    }
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .modelContainer(for: Book.self)
+        }
+    }
+}
+```
+
+Jesteśmy przygotowani do wykorzystania tej klasy z SwiftData. Wróćmy do modelu Genre i zastosujmy makro Attribute do właściwości color. Ten atrybut określa specyficzne zachowanie, które SwiftData implementuje dla właściwości z adnotacjami w klasie zarządzającej.
+
+```swift
+import Foundation
+import SwiftData
+import UIKit
+
+@Model
+final class Genre {
+    var name: String
+    var books = [Book]()
+    
+    @Attribute(.transformable(by: ColorTransformer.self))
+    var color: UIColor
+    
+    init(name: String, color: UIColor) {
+        self.name = name
+        self.color = color
+    }
+}
+```
+
+Jesteśmy teraz gotowi do aktualizacji widoku AddNewGenre, aby uwzględnić próbnik kolorów, aby użytkownik mógł zapisać kolor wraz z gatunkiem.
+
+Zaczniemy od dodania nowej właściwości stanowej o nazwie color:
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct AddNewGenre: View {
+    ...
+    
+    @State private var color: Color = .green
+```
+
+Następnie użyjemy widoku ColorPicker, aby pokazać selerator kolorów dla gatunku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct AddNewGenre: View {
+    ...
+    
+    @State private var color: Color = .green
+    
+    var body: some View {
+        NavigationStack {
+            VStack {
+                TextField("Add New Genre", text: $name)
+                 ... 
+                
+                ColorPicker("Select Genre Color", selection: $color)
+```
+
+Dodatkowo upewnijmy się, że kolor jest uwzględniony podczas zapisywania nowego gatunku.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct AddNewGenre: View {
+    ...
+    
+    @State private var color: Color = .green
+    
+    var body: some View {
+        NavigationStack {
+            VStack {
+                ...
+                
+                ColorPicker("Select Genre Color", selection: $color)
+                
+                HStack {
+                    Button("Save") {
+                        let genre = Genre(name: name, color: UIColor(color))
+                        context.insert(genre)
+```
+
+Zmodyfikuj `GenreListView`, aby powiększyć rozmiar dolnego arkusza, dając użytkownikom możliwość dodania nowego gatunku z kolorem.
+
+```swift
+import SwiftUI
+import SwiftData
+
+struct GenreListView: View {
+   ...  
+    var body: some View {
+        ...
+                    .sheet(isPresented: $presentAddNew, content: {
+                        AddNewGenre()
+                            .presentationDetents([.fraction(0.4)])
+                            .interactiveDismissDisabled()
+                    })
+                }
+```
+
+**Uwaga: ta funkcja jest przełomową zmianą w schemacie. Porozmawiamy o strategiach migracji schematów w dalszej części, ale na razie będziesz musiał usunąć i ponownie zainstalować aplikację, aby zobaczyć tę zmianę.**
+
+
+
+### Migracja bazy
+
+Podczas implementacji obsługi kolorów dla gatunku pojawił się problem spowodowany zmianą schematu bazy danych, który spowodował awarię aplikacji. Przyczyną było dodanie nowego pola bez wersjonowania naszego magazynu danych. W fazie rozwoju możliwe jest usunięcie i ponowne zainstalowanie aplikacji, ale w aplikacji produkcyjnej to rozwiązanie nie jest idealne.
+
+Aby zarządzać zmianami schematu bazy danych, SwiftData oferuje dwie strategie:
+
+Lekka migracja: Odpowiednia, gdy zmiany nie wpływają na przechowywane dane, takie jak zmiana nazw kolumn tabeli.
+
+Migracja niestandardowa: Odpowiednia, gdy występują zmiany w regułach przechowywania danych, co wymaga migracji istniejących danych klienta. Na przykład zapewnienie unikalnych nazw gatunków bez duplikatów. Takie podejście wymaga zdefiniowania zasad migracji danych, aby uniknąć utraty danych podczas przejścia.
+
+Zanim rozpoczniemy którąkolwiek z migracji, utworzymy folder, aby przechowywać wszystkie nasze pliki schematów w projekcie ReadingLogs.
 
 
 

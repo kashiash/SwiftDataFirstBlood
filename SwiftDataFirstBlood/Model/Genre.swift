@@ -7,13 +7,18 @@
 
 import Foundation
 import SwiftData
+import UIKit
 
 @Model
 final class Genre {
     var name: String
     var books = [Book]()
 
-    init(name: String) {
+    @Attribute(.transformable(by: ColorTransformer.self))
+    var color: UIColor
+
+    init(name: String, color: UIColor) {
         self.name = name
+        self.color = color
     }
 }

@@ -10,6 +10,11 @@ import SwiftData
 
 @main
 struct SwiftDataFirstBloodApp: App {
+
+    init() {
+        ValueTransformer.setValueTransformer(ColorTransformer(),
+                        forName: NSValueTransformerName("ColorTransformer"))
+    }
     var body: some Scene {
         WindowGroup {
             ContentView()
